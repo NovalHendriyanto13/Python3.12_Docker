@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends
 import torch
 import configs.appConfig as appConfig
 from app.controllers.api.authController import AuthController
 from app.middlewares.customHeader import CustomHeader
+from app.middlewares.jwtToken import JWTToken
 from core.models.commonModel import SuccessModel
 
 router = APIRouter(
@@ -23,3 +24,7 @@ async def index():
 @router.post("/login")
 async def login(request: Request):
     return await AuthController.login(request)
+
+@router.get("/me")
+async def me(request: Request, token_data: dict = Depends(JWTToken.verify)):
+    return token_data
