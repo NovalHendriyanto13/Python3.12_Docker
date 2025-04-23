@@ -1,10 +1,7 @@
 from fastapi import APIRouter, Request, Depends
-import torch
 import configs.appConfig as appConfig
-from app.controllers.api.authController import AuthController
 from app.middlewares.customHeader import CustomHeader
-from app.middlewares.jwtToken import JWTToken
-from core.models.commonModel import SuccessModel
+from core.models.httpModel import SuccessModel
 
 router = APIRouter(
     prefix="/auth", 

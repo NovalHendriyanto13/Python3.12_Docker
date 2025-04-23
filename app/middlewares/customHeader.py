@@ -1,6 +1,6 @@
 from fastapi.routing import APIRoute
 from fastapi import Request, Response, HTTPException
-from core.models.commonModel import ErrorModel
+from core.models.httpModel import ErrorModel
 import configs.appConfig as appConfig
 
 class CustomHeader(APIRoute):

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 import sys
 import uvicorn
+from mangum import Mangum
 from pathlib import Path
 import routes.routes as routers
 import configs.appConfig as appConfig
@@ -22,5 +23,6 @@ async def read_root():
 async def httpExceptionHandler(request: Request, ex: HTTPException):
     return await CustomHttpException.handle(request, ex)
 
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=appConfig.app_port, reload=True)
+handler = Mangum(app)
+# if __name__ == "__main__":
+#     uvicorn.run("main:app", host="0.0.0.0", port=appConfig.app_port, reload=True)
