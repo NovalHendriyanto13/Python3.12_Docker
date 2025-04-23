@@ -23,8 +23,4 @@ async def index():
 
 @router.post("/login")
 async def login(request: Request):
-    return await AuthController.login(request)
-
-@router.get("/me")
-async def me(request: Request, token_data: dict = Depends(JWTToken.verify)):
-    return token_data
+    return {}

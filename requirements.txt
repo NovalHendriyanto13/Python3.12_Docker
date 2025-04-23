@@ -1,11 +1,4 @@
 fastapi
 uvicorn
-torch
-torchvision
-torchaudio 
-transformers
 httpx
-sqlalchemy
-pyodbc
-python-jose[cryptography]
-passlib[bcrypt]
+mangum

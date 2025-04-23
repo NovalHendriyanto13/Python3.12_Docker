@@ -1,14 +1,13 @@
 version: "3.8"
 
 services:
-  peregerine_fmp:
-    container_name: peregerine_fmp
+  peregerine:
+    container_name: peregerine
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-      - "8888:8888"  # Expose Jupyter Notebook
     env_file:
       - .env
     volumes:
