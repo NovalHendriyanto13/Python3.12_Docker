@@ -2,7 +2,7 @@
 FROM public.ecr.aws/lambda/python:3.12
 
 # Set working directory
-WORKDIR /app
+WORKDIR /var/task
 
 # RUN apt-get update && apt-get install -y nodejs npm
 
@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 8080 8888
 
 # Run FastAPI with Uvicorn
-CMD ["main.handler"]
+CMD ["lambda_handler.handler"]
