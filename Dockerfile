@@ -1,5 +1,5 @@
 # Use Python 3 base image
-FROM python:3.12
+FROM public.ecr.aws/lambda/python:3.12
 
 # Set working directory
 WORKDIR /app
@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 8080 8888
 
 # Run FastAPI with Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+CMD ["main.handler"]
