@@ -1,5 +1,5 @@
 # Use Python 3 base image
-FROM public.ecr.aws/lambda/python:3.12
+FROM public.ecr.aws/lambda/python:3.10
 
 # Set working directory
 WORKDIR /var/task
@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose the port FastAPI runs on
-EXPOSE 8080 8888
+EXPOSE 8080
 
 # Run FastAPI with Uvicorn
 CMD ["lambda_handler.handler"]
