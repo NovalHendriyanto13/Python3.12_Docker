@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Request, Depends
-import torch
+from fastapi import APIRouter, Request
 import configs.appConfig as appConfig
 from app.controllers.api.authController import AuthController
 from app.middlewares.customHeader import CustomHeader
-from app.middlewares.jwtToken import JWTToken
 from core.models.commonModel import SuccessModel
 
 router = APIRouter(
