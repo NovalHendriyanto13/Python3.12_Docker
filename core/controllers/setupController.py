@@ -1,11 +1,13 @@
 from fastapi import Request, HTTPException
 from core.models.commonModel import SuccessModel, ErrorModel
+from core.helpers.customHelper import findIndex, copyFile
+import sys, subprocess
 
 class SetupController:
     def __init__(self):
         self.__availableList = [
-            { "name": "JWT", "package": "jwt_plugins" },
-            { "name": "Redis", "package": "redis_plugins" },
+            { "name": "JWT", "package": "jwt", "plugin_name": "jwt_plugins" },
+            { "name": "Redis", "package": "redis[async]", "plugin_name": "redis_plugins" },
         ]
 
     async def availableList(self):
@@ -21,23 +23,45 @@ class SetupController:
     async def pluginInstall(self, request: Request):
         requestData = await request.json()
         pluginName = requestData.get("name")
+        valid = False
 
         messageResponse = "Invalid Request, Please select the available plugin"
-        match (pluginName):
-            case ("JWT"):
-                messageResponse = "JWT is selected"
-            case ("Redis"):
-                messageResponse = "Redis is selected"
-            case _:
-                messageResponse = messageResponse
-        
-        return ErrorModel(
-            success= False,
-            message= messageResponse,
-            data= {},
-            code=400
-        )
+
+        index = findIndex(self.__availableList, "name", pluginName)
+        if (index > -1):
+            messageResponse = f"{pluginName} is selected"
+            valid = True
+            try:
+                plugin = self.__availableList[index]["package"]
+                installPackage(plugin)
+
+                pluginName = self.__availableList[index]["plugin_name"]
+                pluginPath = f"./plugins/{pluginName}"
+                installPackage(pluginPath)
+
+                destPluginDest = f""
+                copyFile(pluginPath, )
+
+            except subprocess.CalledProcessError as e:
+                messageResponse = str(e)
+
+        if (valid):
+            return SuccessModel(
+                success= True,
+                message= messageResponse,
+                data= {},
+                code=200
+            )
+        else:
+            return ErrorModel(
+                success= False,
+                message= messageResponse,
+                code=400
+            )
+
+    def installPackage(name):
+        subprocess.check_call([sys.executable, "-m", "pip", "install", name])
 
 # DI
-def get_DI_controller():
+def get_DI_setup_controller():
     return SetupController()

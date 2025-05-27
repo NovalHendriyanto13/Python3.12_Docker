@@ -5,7 +5,7 @@ class ErrorModel(BaseModel):
     success: Optional[bool] = False
     code: int
     message: str
-    data: dict
+    data: Optional[dict] = None
 
 class SuccessModel(BaseModel):
     success: Optional[bool] = True
