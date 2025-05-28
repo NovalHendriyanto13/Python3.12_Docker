@@ -33,14 +33,14 @@ class SetupController:
             valid = True
             try:
                 plugin = self.__availableList[index]["package"]
-                installPackage(plugin)
+                self.installPackage(plugin)
 
-                pluginName = self.__availableList[index]["plugin_name"]
-                pluginPath = f"./plugins/{pluginName}"
-                installPackage(pluginPath)
+                # pluginName = self.__availableList[index]["plugin_name"]
+                # pluginPath = f"./plugins/{pluginName}"
+                # self.installPackage(pluginPath)
 
-                destPluginDest = f""
-                copyFile(pluginPath, )
+                # destPluginDest = f""
+                # copyFile(pluginPath, )
 
             except subprocess.CalledProcessError as e:
                 messageResponse = str(e)
@@ -59,8 +59,14 @@ class SetupController:
                 code=400
             )
 
+    @staticmethod
     def installPackage(name):
         subprocess.check_call([sys.executable, "-m", "pip", "install", name])
+
+    @staticmethod
+    async def getInstalledPackage():
+        return subprocess.check_output([sys.executable, "-m", "pip", "list"])
+
 
 # DI
 def get_DI_setup_controller():

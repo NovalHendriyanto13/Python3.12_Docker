@@ -14,3 +14,6 @@ async def availableList(controller: SetupController = Depends(get_DI_setup_contr
 async def pluginsInstall(request: Request, controller: SetupController = Depends(get_DI_setup_controller)):
     return await controller.pluginInstall(request)
 
+@router.get("/get-installed-plugins")
+async def getInstalledPlugins(request: Request, controller: SetupController = Depends(get_DI_setup_controller)):
+    return await controller.getInstalledPackage()
