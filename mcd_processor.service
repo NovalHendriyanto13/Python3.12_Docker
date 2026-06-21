@@ -1,0 +1,13 @@
+[Unit]
+Description=MCD CDP Realtime Sync and Prefect Server Service
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/var/www/html/works/mcd_cdp/processor_python
+ExecStart=/bin/bash /var/www/html/works/mcd_cdp/processor_python/run_realtime.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
