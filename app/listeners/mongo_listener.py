@@ -6,6 +6,7 @@ from app.services.mongo.offers_mongo import upsert_offers
 from app.services.mongo.consumers_mongo import upsert_consumers
 from app.services.mongo.advertisements_mongo import upsert_advertisements
 from app.services.mongo.loyalty_points_card_transactions_mongo import upsert_loyalty_points_card_transactions
+from app.services.mongo.loyalty_stamp_card_transactions_mongo import upsert_loyalty_stamp_card_transactions
 
 COLLECTION_HANDLERS = {
     "mcd_offers": {
@@ -20,6 +21,9 @@ COLLECTION_HANDLERS = {
     "mcd_loyalty_points_card_transactions": {
         "upsert": upsert_loyalty_points_card_transactions,
     },
+    "mcd_loyalty_stamp_card_transactions": {
+        "upsert": upsert_loyalty_stamp_card_transactions,
+    }
 }
 
 async def watch_mongo(tablename: str):

@@ -73,7 +73,7 @@ async def load_chunk_to_postgres(batch: list, columns: list):
             sale_id,
             venue_external_id,         
             bonus_points_total               
-        FROM mcd_loyalty_points_card_transactions
+        FROM temp_mcd_loyalty_points_card_transactions
         ON CONFLICT (points_card_transaction_id) DO UPDATE SET
             points_card_transaction_group_id = EXCLUDED.points_card_transaction_group_id,  
             pos_sales_transaction_id = EXCLUDED.pos_sales_transaction_id,
@@ -184,9 +184,9 @@ async def extract_and_load_loyalty_points_card_transactions_fast():
 
 @flow(name="mongo-to-postgres-etl", log_prints=True)
 async def etl_loyalty_points_card_transactions_flow():
-    print("ETL Flow advertisement started...")
+    print("ETL Flow loyalty point card transaction started...")
     await extract_and_load_loyalty_points_card_transactions_fast()
-    print("ETL Flow advertisement finished!")
+    print("ETL Flow loyalty point card transaction finished!")
 
 if __name__ == "__main__":
     asyncio.run(etl_loyalty_points_card_transactions_flow())
