@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, SmallInteger, Integer, Numeric
+from sqlalchemy import Column, String, Boolean, Integer, Numeric
 from configs.database import Base
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 import uuid

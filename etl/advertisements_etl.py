@@ -9,6 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from configs.database import engine
 from configs.app_config import mongo_uri, mongo_db
+from app.helpers.app_helper import to_datetime, to_int, to_bool
 
 # Helper function to load a single chunk to PostgreSQL using COPY + Merge
 async def load_chunk_to_postgres(batch: list, columns: list):
@@ -29,18 +30,78 @@ async def load_chunk_to_postgres(batch: list, columns: list):
         # Merge/Upsert query
         upsert_query = """
         INSERT INTO mcd_advertisements (
-            id, campaignid, title, description, startdate, enddate, status     
+            advertisement_id,
+            campaign_id,
+            market,
+            name,
+            title,
+            description,
+            click_through_url,
+            status,
+            channel_code,
+            placement_code,
+            no_compete_group,
+            enable_time_based_weight,
+            enable_distance_weight,
+            apply_geo_fence_filters,
+            apply_tag_value_filter,
+            weight,
+            days_of_week,
+            daily_start_time,
+            daily_end_time,
+            date_modified,
+            date_created,
+            start_date,
+            end_date
         )
         SELECT 
-            id, campaignid, title, description, startdate, enddate, status 
-        FROM mcd_advertisements
-        ON CONFLICT (id) DO UPDATE SET
-            campaignid = EXCLUDED.campaignid,
+            advertisement_id,
+            campaign_id,
+            market,
+            name,
+            title,
+            description,
+            click_through_url,
+            status,
+            channel_code,
+            placement_code,
+            no_compete_group,
+            enable_time_based_weight,
+            enable_distance_weight,
+            apply_geo_fence_filters,
+            apply_tag_value_filter,
+            weight,
+            days_of_week,
+            daily_start_time,
+            daily_end_time,
+            date_modified,
+            date_created,
+            start_date,
+            end_date 
+        FROM temp_mcd_advertisements
+        ON CONFLICT (advertisement_id) DO UPDATE SET
+            campaign_id = EXCLUDED.campaign_id,
+            market = EXCLUDED.market,
+            name = EXCLUDED.name,
             title = EXCLUDED.title,
             description = EXCLUDED.description,
-            startdate = EXCLUDED.startdate,
-            enddate = EXCLUDED.enddate,
-            status = EXCLUDED.status;
+            click_through_url = EXCLUDED.click_through_url,
+            status = EXCLUDED.status,
+            channel_code = EXCLUDED.channel_code,
+            placement_code = EXCLUDED.placement_code,
+            no_compete_group = EXCLUDED.no_compete_group,
+            enable_time_based_weight = EXCLUDED.enable_time_based_weight,
+            enable_distance_weight = EXCLUDED.enable_distance_weight,
+            apply_geo_fence_filters = EXCLUDED.apply_geo_fence_filters,
+            apply_tag_value_filter = EXCLUDED.apply_tag_value_filter,
+            weight = EXCLUDED.weight,
+            days_of_week = EXCLUDED.days_of_week,
+            daily_start_time = EXCLUDED.daily_start_time,
+            daily_end_time = EXCLUDED.daily_end_time,
+            date_modified = EXCLUDED.date_modified,
+            date_created = EXCLUDED.date_created,
+            start_date = EXCLUDED.start_date,
+            end_date = EXCLUDED.end_date;
         """
         await conn.execute(text(upsert_query))
 
@@ -58,7 +119,29 @@ async def extract_and_load_advertisements_fast():
     cursor = db["mcd_advertisements"].find().batch_size(100000)
     
     columns = [
-        "id", "campaignid", "title", "description", "startdate", "enddate", "status"  
+        "advertisement_id",
+        "campaign_id",
+        "market",
+        "name",
+        "title",
+        "description",
+        "click_through_url",
+        "status",
+        "channel_code",
+        "placement_code",
+        "no_compete_group",
+        "enable_time_based_weight",
+        "enable_distance_weight",
+        "apply_geo_fence_filters",
+        "apply_tag_value_filter",
+        "weight",
+        "days_of_week",
+        "daily_start_time",
+        "daily_end_time",
+        "date_modified",
+        "date_created",
+        "start_date",
+        "end_date"
     ]
     
     chunk_size = 1000000  # Batasi 1.000.000 data per transaksi database
@@ -69,13 +152,29 @@ async def extract_and_load_advertisements_fast():
     
     async for doc in cursor:
         row = (
-            doc.get("id"),
-            doc.get("campaignid"),
+            to_int(doc.get("id")),
+            to_int(doc.get("campaignid")),
+            doc.get("market"),
+            doc.get("name"),
             doc.get("title"),
             doc.get("description"),
-            doc.get("startdate"),
-            doc.get("enddate"),
-            doc.get("status")
+            doc.get("click_through_url"),
+            to_int(doc.get("status")),
+            doc.get("channel_code"),
+            doc.get("placement_code"),
+            doc.get("no_compete_group"),
+            to_bool(doc.get("enable_time_based_weight")),
+            to_bool(doc.get("enable_distance_weight")),
+            to_bool(doc.get("apply_geo_fence_filters")),
+            to_bool(doc.get("apply_tag_value_filter")),
+            to_int(doc.get("weight")),
+            doc.get("days_of_week"),
+            to_int(doc.get("daily_start_time")),
+            to_int(doc.get("daily_end_time")),
+            to_datetime(doc.get("date_modified")),
+            to_datetime(doc.get("date_created")),
+            to_datetime(doc.get("startdate")),
+            to_datetime(doc.get("enddate"))
         )
         batch.append(row)
         

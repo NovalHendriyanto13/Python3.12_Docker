@@ -8,7 +8,24 @@ WATCH_COLLECTIONS = [
     "mcd_loyalty_points_card_transactions",
     "mcd_loyalty_stamp_card_transactions",
     "mcd_loyalty_stamp_card_reward_transactions",
-    "mcd_sales_headers"
+    "mcd_sales_headers",
+    "mcd_advertisement_activities",
+    "mcd_bonus_points_breakdown",
+    "mcd_campaigns",
+    "mcd_consumer_activities",
+    "mcd_consumer_external_ids",
+    "mcd_consumer_tags",
+    "mcd_gdpr_consumer_consent_events",
+    "mcd_gdpr_consumer_consent_snapshot",
+    "mcd_loyalty_activities",
+    "mcd_loyalty_program_rewards",
+    "mcd_loyalty_programs",
+    "mcd_messages",
+    "mcd_offer_activities",
+    "mcd_pushmessage_activities",
+    "mcd_sale_details",
+    "mcd_tag_values",
+    "mcd_venues",
 ]
 
 async def start_tasks():

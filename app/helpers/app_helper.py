@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 def to_uuid(val):
@@ -13,13 +13,18 @@ def to_uuid(val):
 def to_datetime(val):
     if not val or val == "":
         return None
-    if isinstance(val, datetime):
-        return val
+
+    if isinstance(val, date):
+        return val if not isinstance(val, datetime) else val.date()
+
     try:
-        clean_val = val.replace("Z", "+00:00") if isinstance(val, str) else val
-        return datetime.fromisoformat(clean_val)
+        clean_val = val.replace("Z", "+00:00")
+        return datetime.fromisoformat(clean_val).date()
     except (ValueError, TypeError):
-        return None
+        try:
+            return date.fromisoformat(val)
+        except (ValueError, TypeError):
+            return None
 
 def to_int(val):
     if val is None or val == "":
@@ -45,3 +50,4 @@ def to_bool(val):
     if isinstance(val, str):
         return val.lower() in ("true", "1", "t", "y", "yes")
     return bool(val)
+
