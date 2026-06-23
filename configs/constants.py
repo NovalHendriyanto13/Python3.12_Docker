@@ -5,3 +5,8 @@ device_types = {
     2: "IOS",
     None: None
 }
+
+campaign_status = {
+    "Active": 0,
+    "Archived": 1
+}

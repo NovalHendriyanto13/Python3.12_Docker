@@ -14,6 +14,11 @@ from etl.loyalty_stamp_card_transactions_etl import etl_loyalty_stamp_card_trans
 from etl.loyalty_stamp_card_reward_transactions_etl import etl_loyalty_stamp_card_reward_transactions_flow
 from etl.sales_headers_etl import etl_sales_headers_flow
 from etl.advertisement_activities_etl import etl_advertisement_activities_flow
+from etl.bonus_points_breakdown_etl import etl_bonus_points_breakdown_flow
+from etl.campaigns_etl import etl_campaigns_flow
+# from etl.consumer_activities_etl import etl_consumer_activities_flow
+from etl.customer_externalID_etl import etl_consumer_external_ids_flow
+# from etl.consumer_tags_etl import etl_consumer_tags_flow
 
 @flow(name="master-etl", log_prints=True)
 async def master_flow():
@@ -28,7 +33,12 @@ async def master_flow():
         # etl_loyalty_stamp_card_transactions_flow(),
         # etl_loyalty_stamp_card_reward_transactions_flow(),
         # etl_sales_headers_flow(),
-        etl_advertisement_activities_flow(),
+        # etl_advertisement_activities_flow(),
+        # etl_bonus_points_breakdown_flow(), // NO CSV DATA
+        # etl_campaigns_flow(),
+        # etl_consumer_activities_flow(), // tinjau ulang
+        etl_consumer_external_ids_flow(),
+        # etl_consumer_tags_flow(), // NO CSV
     )
 
     print("✅ Master ETL finished!")
