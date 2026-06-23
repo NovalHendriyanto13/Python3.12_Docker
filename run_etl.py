@@ -11,6 +11,8 @@ from etl.consumers_etl import etl_consumer_flow
 from etl.advertisements_etl import etl_advertisement_flow
 from etl.loyalty_points_card_transactions_etl import etl_loyalty_points_card_transactions_flow
 from etl.loyalty_stamp_card_transactions_etl import etl_loyalty_stamp_card_transactions_flow
+from etl.loyalty_stamp_card_reward_transactions_etl import etl_loyalty_stamp_card_reward_transactions_flow
+from etl.sales_headers_etl import etl_sales_headers_flow
 
 @flow(name="master-etl", log_prints=True)
 async def master_flow():
@@ -22,7 +24,9 @@ async def master_flow():
         # etl_offers_flow(),
         # etl_advertisement_flow(),
         # etl_loyalty_points_card_transactions_flow(), 
-        etl_loyalty_stamp_card_transactions_flow() 
+        # etl_loyalty_stamp_card_transactions_flow(),
+        # etl_loyalty_stamp_card_reward_transactions_flow(),
+        etl_sales_headers_flow(),
     )
 
     print("✅ Master ETL finished!")

@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from decimal import Decimal
 
 def to_uuid(val):
     if not val or val == "":
@@ -25,6 +26,14 @@ def to_int(val):
         return None
     try:
         return int(val)
+    except (ValueError, TypeError):
+        return None
+
+def to_decimal(val):
+    if val is None or val == "":
+        return None
+    try:
+        return Decimal(val)
     except (ValueError, TypeError):
         return None
 

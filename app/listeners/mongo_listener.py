@@ -7,6 +7,8 @@ from app.services.mongo.consumers_mongo import upsert_consumers
 from app.services.mongo.advertisements_mongo import upsert_advertisements
 from app.services.mongo.loyalty_points_card_transactions_mongo import upsert_loyalty_points_card_transactions
 from app.services.mongo.loyalty_stamp_card_transactions_mongo import upsert_loyalty_stamp_card_transactions
+from app.services.mongo.loyalty_stamp_card_reward_transactions_mongo import upsert_loyalty_stamp_card_reward_transactions
+from app.services.mongo.sales_headers_mongo import upsert_sales_headers
 
 COLLECTION_HANDLERS = {
     "mcd_offers": {
@@ -23,6 +25,12 @@ COLLECTION_HANDLERS = {
     },
     "mcd_loyalty_stamp_card_transactions": {
         "upsert": upsert_loyalty_stamp_card_transactions,
+    },
+    "mcd_loyalty_stamp_card_reward_transactions": {
+        "upsert": upsert_loyalty_stamp_card_transactions,
+    },
+    "mcd_sales_headers": {
+        "upsert": upsert_sales_headers,
     }
 }
 

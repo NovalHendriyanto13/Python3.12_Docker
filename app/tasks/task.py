@@ -7,6 +7,8 @@ WATCH_COLLECTIONS = [
     "mcd_advertisements",
     "mcd_loyalty_points_card_transactions",
     "mcd_loyalty_stamp_card_transactions",
+    "mcd_loyalty_stamp_card_reward_transactions",
+    "mcd_sales_headers"
 ]
 
 async def start_tasks():
