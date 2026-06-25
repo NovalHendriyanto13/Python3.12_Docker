@@ -9,6 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from configs.database import engine
 from configs.app_config import mongo_uri, mongo_db
+from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid
 
 # Helper function to load a single chunk to PostgreSQL using COPY + Merge
 async def load_chunk_to_postgres(batch: list, columns: list):
@@ -29,33 +30,62 @@ async def load_chunk_to_postgres(batch: list, columns: list):
         # Merge/Upsert query
         upsert_query = """
         INSERT INTO mcd_consumer (
-            reportingid, firstname, lastname, fullname, emailaddress,
-            registrationtype, postcode, creationdate, modifieddate, dateofbirth,
-            gender, isdeactivated, deactivationdate, lastknowndeviceid, phonenumber,
-            consumertype
+            reporting_id,
+            last_known_device_id,
+            market,
+            first_name,
+            last_name,
+            full_name,
+            email_address,
+            gender,
+            date_of_birth,
+            phone_number,
+            postcode,
+            is_deactivated,
+            registration_type,
+            consumer_type,
+            registration_source,
+            creation_date,
+            modified_date,
+            deactivation_date
         )
         SELECT 
-            reportingid, firstname, lastname, fullname, emailaddress,
-            registrationtype, postcode, creationdate, modifieddate, dateofbirth,
-            gender, isdeactivated, deactivationdate, lastknowndeviceid, phonenumber,
-            consumertype
+            reporting_id,
+            last_known_device_id,
+            market,
+            first_name,
+            last_name,
+            full_name,
+            email_address,
+            gender,
+            date_of_birth,
+            phone_number,
+            postcode,
+            is_deactivated,
+            registration_type,
+            consumer_type,
+            registration_source,
+            creation_date,
+            modified_date,
+            deactivation_date
         FROM temp_mcd_consumer
-        ON CONFLICT (reportingid) DO UPDATE SET
-            firstname = EXCLUDED.firstname,
-            lastname = EXCLUDED.lastname,
-            fullname = EXCLUDED.fullname,
-            emailaddress = EXCLUDED.emailaddress,
-            registrationtype = EXCLUDED.registrationtype,
+        ON CONFLICT (reporting_id) DO UPDATE SET
+            first_name = EXCLUDED.first_name,
+            last_name = EXCLUDED.last_name,
+            full_name = EXCLUDED.full_name,
+            email_address = EXCLUDED.email_address,
+            registration_type = EXCLUDED.registration_type,
             postcode = EXCLUDED.postcode,
-            creationdate = EXCLUDED.creationdate,
-            modifieddate = EXCLUDED.modifieddate,
-            dateofbirth = EXCLUDED.dateofbirth,
+            creation_date = EXCLUDED.creation_date,
+            modified_date = EXCLUDED.modified_date,
+            date_of_birth = EXCLUDED.date_of_birth,
             gender = EXCLUDED.gender,
-            isdeactivated = EXCLUDED.isdeactivated,
-            deactivationdate = EXCLUDED.deactivationdate,
-            lastknowndeviceid = EXCLUDED.lastknowndeviceid,
-            phonenumber = EXCLUDED.phonenumber,
-            consumertype = EXCLUDED.consumertype;
+            is_deactivated = EXCLUDED.is_deactivated,
+            deactivation_date = EXCLUDED.deactivation_date,
+            last_known_device_id = EXCLUDED.last_known_device_id,
+            registration_source = EXCLUDED.registration_source,
+            phone_number = EXCLUDED.phone_number,
+            consumer_type = EXCLUDED.consumer_type;
         """
         await conn.execute(text(upsert_query))
 
@@ -73,10 +103,24 @@ async def extract_and_load_consumers_fast():
     cursor = db["mcd_consumer"].find().batch_size(100000)
     
     columns = [
-        "reportingid", "firstname", "lastname", "fullname", "emailaddress",
-        "registrationtype", "postcode", "creationdate", "modifieddate", "dateofbirth",
-        "gender", "isdeactivated", "deactivationdate", "lastknowndeviceid", "phonenumber",
-        "consumertype"
+        "reporting_id",
+        "last_known_device_id",
+        "market",
+        "first_name",
+        "last_name",
+        "full_name",
+        "email_address",
+        "gender",
+        "date_of_birth",
+        "phone_number",
+        "postcode",
+        "is_deactivated",
+        "registration_type",
+        "consumer_type",
+        "registration_source",
+        "creation_date",
+        "modified_date",
+        "deactivation_date"
     ]
     
     chunk_size = 1000000  # Batasi 1.000.000 data per transaksi database
@@ -87,22 +131,24 @@ async def extract_and_load_consumers_fast():
     
     async for doc in cursor:
         row = (
-            doc.get("reportingid"),
+            to_uuid(doc.get("reportingid")),
+            doc.get("lastknowndeviceid"),
+            doc.get("market"),
             doc.get("firstname"),
             doc.get("lastname"),
             doc.get("fullname"),
             doc.get("emailaddress"),
-            doc.get("registrationtype"),
-            doc.get("postcode"),
-            doc.get("creationdate"),
-            doc.get("modifieddate"),
-            doc.get("dateofbirth"),
             doc.get("gender"),
-            str(doc.get("isdeactivated")) if doc.get("isdeactivated") is not None else None,
-            doc.get("deactivationdate"),
-            doc.get("lastknowndeviceid"),
+            to_datetime(doc.get("dateofbirth")),
             doc.get("phonenumber"),
-            doc.get("consumertype")
+            doc.get("postcode"),
+            to_bool(doc.get("isdeactivated")),
+            to_int(doc.get("registrationtype")),
+            to_int(doc.get("consumertype")),
+            doc.get("registration_source"),
+            to_datetime(doc.get("creationdate")),
+            to_datetime(doc.get("modifieddate")),
+            to_datetime(doc.get("deactivationdate"))
         )
         batch.append(row)
         

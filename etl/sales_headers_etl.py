@@ -30,13 +30,14 @@ async def load_chunk_to_postgres(batch: list, columns: list):
         # Merge/Upsert query
         upsert_query = """
         INSERT INTO mcd_sales_headers (
-            reporting_id,
             sale_id,
+            pos_transaction_id,
+            reporting_id,
+            offer_ids,
+            venue_external_id,
             total_amount,
-            offer_id,
-            internal_id,
-            gross_amount,
             tax_total_amount,
+            gross_amount,
             before_discount_tax_total_amount,
             before_discount_total_amount,
             day_part,
@@ -44,18 +45,21 @@ async def load_chunk_to_postgres(batch: list, columns: list):
             transaction_kind,
             order_take_platform,
             sale_type,
-            venue_id,
-            date_occurred,
-            pos_transaction_id                      
+            date,
+            market,
+            transaction_source_time_local,
+            plexure_processing_time_utc,
+            internal_id        
         )
         SELECT 
-            reporting_id,
             sale_id,
+            pos_transaction_id,
+            reporting_id,
+            offer_ids,
+            venue_external_id,
             total_amount,
-            offer_id,
-            internal_id,
-            gross_amount,
             tax_total_amount,
+            gross_amount,
             before_discount_tax_total_amount,
             before_discount_total_amount,
             day_part,
@@ -63,28 +67,32 @@ async def load_chunk_to_postgres(batch: list, columns: list):
             transaction_kind,
             order_take_platform,
             sale_type,
-            venue_id,
-            date_occurred,
-            pos_transaction_id          
+            date,
+            market,
+            transaction_source_time_local,
+            plexure_processing_time_utc,
+            internal_id     
         FROM temp_mcd_sales_headers
-        ON CONFLICT (stamp_card_reward_transaction_id) DO UPDATE SET
-            reporting_id,
-            sale_id,
-            total_amount,
-            offer_id,
-            internal_id,
-            gross_amount,
-            tax_total_amount,
-            before_discount_tax_total_amount,
-            before_discount_total_amount,
-            day_part,
-            pod_type,
-            transaction_kind,
-            order_take_platform,
-            sale_type,
-            venue_id,
-            date_occurred,
-            pos_transaction_id;
+        ON CONFLICT (sale_id) DO UPDATE SET
+            pos_transaction_id = EXCLUDED.pos_transaction_id,
+            reporting_id = EXCLUDED.reporting_id,
+            offer_ids = EXCLUDED.offer_ids,
+            venue_external_id = EXCLUDED.venue_external_id,
+            total_amount = EXCLUDED.total_amount,
+            tax_total_amount = EXCLUDED.tax_total_amount,
+            gross_amount = EXCLUDED.gross_amount,
+            before_discount_tax_total_amount = EXCLUDED.before_discount_tax_total_amount,
+            before_discount_total_amount = EXCLUDED.before_discount_total_amount,
+            day_part = EXCLUDED.day_part,
+            pod_type = EXCLUDED.pod_type,
+            transaction_kind = EXCLUDED.transaction_kind,
+            order_take_platform = EXCLUDED.order_take_platform,
+            sale_type = EXCLUDED.sale_type,
+            date = EXCLUDED.date,
+            market = EXCLUDED.market,
+            transaction_source_time_local = EXCLUDED.transaction_source_time_local,
+            plexure_processing_time_utc = EXCLUDED.plexure_processing_time_utc,
+            internal_id = EXCLUDED.internal_id;
         """
         await conn.execute(text(upsert_query))
 
@@ -102,13 +110,14 @@ async def extract_and_load_sales_headers_fast():
     cursor = db["mcd_sales_headers"].find().batch_size(100000)
     
     columns = [
-        "reporting_id",
         "sale_id",
+        "pos_transaction_id",
+        "reporting_id",
+        "offer_ids",
+        "venue_external_id",
         "total_amount",
-        "offer_id",
-        "internal_id",
-        "gross_amount",
         "tax_total_amount",
+        "gross_amount",
         "before_discount_tax_total_amount",
         "before_discount_total_amount",
         "day_part",
@@ -116,9 +125,11 @@ async def extract_and_load_sales_headers_fast():
         "transaction_kind",
         "order_take_platform",
         "sale_type",
-        "venue_id",
-        "date_occurred",
-        "pos_transaction_id"
+        "date",
+        "market",
+        "transaction_source_time_local",
+        "plexure_processing_time_utc",
+        "internal_id"
     ]
     
     chunk_size = 1000000  # Batasi 1.000.000 data per transaksi database
@@ -129,23 +140,26 @@ async def extract_and_load_sales_headers_fast():
     
     async for doc in cursor:
         row = (
-            to_uuid(doc.get("reporting_id")),
-            doc.get("sale_id"),
+            (doc.get("saleid")),
+            to_uuid(doc.get("postransactionid")),
+            to_uuid(doc.get("reportingid")),
+            (doc.get("offerids")),
+            (doc.get("venue_external_id")),
             to_decimal(doc.get("total_amount")),
-            to_int(doc.get("offer_id")),
-            doc.get("internal_id"),
-            to_decimal(doc.get("gross_amount")),
             to_decimal(doc.get("tax_total_amount")),
+            to_decimal(doc.get("gross_amount")),
             to_decimal(doc.get("before_discount_tax_total_amount")),
             to_decimal(doc.get("before_discount_total_amount")),
-            doc.get("day_part"),
-            doc.get("pod_type"),
-            doc.get("transaction_kind"),
-            doc.get("order_take_platform"),
-            doc.get("sale_type"),
-            to_int(doc.get("venue_id")),
-            to_datetime(doc.get("date_occurred")),
-            to_uuid(doc.get("pos_transaction_id"))
+            (doc.get("day_part")),
+            (doc.get("pod_type")),
+            (doc.get("transaction_kind")),
+            (doc.get("order_take_platform")),
+            (doc.get("sale_type")),
+            to_datetime(doc.get("date")),
+            (doc.get("market")),
+            to_datetime(doc.get("transaction_source_time_local")),
+            to_datetime(doc.get("plexure_processing_time_utc")),
+            doc.get("internal_id")
         )
         batch.append(row)
         

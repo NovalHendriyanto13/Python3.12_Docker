@@ -6,7 +6,7 @@ import uuid
 class BonusPointsBreakdown(Base):
     __tablename__ = "mcd_bonus_points_breakdown"
     
-    points_program_transaction_id = Column(String)
+    points_program_transaction_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     pos_sales_transaction_id = Column(String)
     ordering_method = Column(ARRAY(String))
     day_of_week = Column(ARRAY(String))
@@ -24,5 +24,5 @@ class BonusPointsBreakdown(Base):
     reporting_id = Column(UUID(as_uuid=True))
     date = Column(Date)
     transaction_source_time_local = Column(TIMESTAMP(timezone=True))
-    transaction_time_utc = Column(TIMESTAMP(timezone=True))
+    transaction_time_utc = Column(TIMESTAMP)
     bonus_points_breakdown_position = Column(Integer)
