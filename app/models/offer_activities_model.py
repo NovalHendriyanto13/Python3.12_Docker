@@ -3,8 +3,8 @@ from configs.database import Base
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 import uuid
 
-class Consumers(Base):
-    __tablename__ = "mcd_consumers"
+class OfferActivities(Base):
+    __tablename__ = "mcd_offer_activities"
     
     activity_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  
     activity_data = Column(String, nullable=True)
@@ -19,4 +19,4 @@ class Consumers(Base):
     reporting_id = Column(UUID(as_uuid=True)) 
     date = Column(Date)
     activity_source_time_local = Column(TIMESTAMP(timezone=True))
-    activity_source_time_utc = Column(TIMESTAMP)
+    activity_source_time_utc = Column(TIMESTAMP(timezone=False))

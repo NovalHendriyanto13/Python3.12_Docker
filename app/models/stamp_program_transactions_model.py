@@ -3,8 +3,8 @@ from configs.database import Base
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 import uuid
 
-class PushmessageActivities(Base):
-    __tablename__ = "mcd_pushmessage_activities"
+class StampProgramTransactions(Base):
+    __tablename__ = "mcd_stamp_program_transactions"
 
     activity_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     activity_data = Column(String, nullable=True)
@@ -19,4 +19,4 @@ class PushmessageActivities(Base):
     reporting_id = Column(UUID(as_uuid=True))
     date = Column(Date)
     activity_source_time_local = Column(TIMESTAMP(timezone=True))
-    activity_source_time_utc = Column(TIMESTAMP)
+    activity_source_time_utc = Column(TIMESTAMP(timezone=False))

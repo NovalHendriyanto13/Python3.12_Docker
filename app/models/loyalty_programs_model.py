@@ -28,7 +28,7 @@ class LoyaltyPrograms(Base):
     max_points_requests_per_day = Column(Integer)
     initial_points = Column(Integer)
     is_hidden = Column(Boolean)
-    require_ip_whitelisting = = Column(Boolean)
+    require_ip_whitelisting = Column(Boolean)
     loyalty_program_type = Column(Integer)
     points_expiry_days = Column(Integer)
     expiry_schedule_details = Column(String)

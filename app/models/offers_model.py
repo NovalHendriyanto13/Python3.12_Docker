@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Date, Boolean, Integer, Num
+from sqlalchemy import Column, String, Date, Boolean, Integer, Numeric
 from configs.database import Base
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 import uuid
@@ -28,7 +28,7 @@ class Offers(Base):
     is_giftable = Column(Boolean, nullable=True)
     is_reward = Column(Boolean, nullable=True)
     is_respawning = Column(Boolean, nullable=True)
-    respawns_in_days Column(Integer, nullable=True)
+    respawns_in_days = Column(Integer, nullable=True)
     enable_distance_weight = Column(Boolean, nullable=True)
     is_available_all_stores = Column(Boolean, nullable=True)
     promotional_image_description = Column(String, nullable=True)
@@ -48,4 +48,4 @@ class Offers(Base):
     daily_end_time = Column(Integer, nullable=True)
     offer_start_time = Column(TIMESTAMP(timezone=True))
     offer_expire_time = Column(TIMESTAMP(timezone=True))
-    when_last_updated_utc = Column(TIMESTAMP)
+    when_last_updated_utc = Column(TIMESTAMP(timezone=False))

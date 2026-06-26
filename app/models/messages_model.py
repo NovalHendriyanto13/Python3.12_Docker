@@ -3,8 +3,8 @@ from configs.database import Base
 from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP
 import uuid
 
-class Consumers(Base):
-    __tablename__ = "mcd_consumers"
+class Messages(Base):
+    __tablename__ = "mcd_messages"
 
     message_id = Column(Integer, primary_key=True)    
     market = Column(String, nullable=True)

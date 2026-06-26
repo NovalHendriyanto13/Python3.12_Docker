@@ -6,9 +6,9 @@ import uuid
 class SaleDetails(Base):
     __tablename__ = "mcd_sale_details"
 
-    pos_transaction_id = Column(UUID(as_uuid=True))
-    sale_id = Column(UUID(as_uuid=True))
-    reporting_id = Column(UUID(as_uuid=True))
+    pos_transaction_id = Column(UUID(as_uuid=True), primary_key=True)
+    sale_id = Column(UUID(as_uuid=True), primary_key=True)
+    reporting_id = Column(UUID(as_uuid=True), primary_key=True)
     offer_id = Column(Integer)
     external_venue_id = Column(UUID(as_uuid=True))
     market = Column(String)

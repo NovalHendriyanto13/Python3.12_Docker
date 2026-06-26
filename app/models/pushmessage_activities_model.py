@@ -19,4 +19,4 @@ class PushmessageActivities(Base):
     reporting_id = Column(UUID(as_uuid=True))
     date = Column(Date)
     activity_source_time_local = Column(TIMESTAMP(timezone=True))
-    activity_source_time_utc = Column(TIMESTAMP)
+    activity_source_time_utc = Column(TIMESTAMP(timezone=False))

@@ -10,7 +10,7 @@ class GdprConsumerConsentEvents(Base):
     market = Column(String, nullable=True)
     consent_to_store_and_process = Column(Boolean)
     services = Column(JSONB)
-    event_time_utc = Column(TIMESTAMP)
+    event_time_utc = Column(TIMESTAMP(timezone=False))
     date = Column(TIMESTAMP(timezone=True))
     
     

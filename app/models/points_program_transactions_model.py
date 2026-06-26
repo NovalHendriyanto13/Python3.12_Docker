@@ -30,4 +30,4 @@ class PointsProgramTransactions(Base):
     reporting_id = Column(UUID(as_uuid=True))
     date = Column(Date)
     transaction_source_time_local = Column(TIMESTAMP(timezone=True))
-    transaction_time_utc = Column(TIMESTAMP)
+    transaction_time_utc = Column(TIMESTAMP(timezone=False))

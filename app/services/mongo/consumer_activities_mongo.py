@@ -1,15 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
-from app.models.advertisement_activities_model import AdvertisementActivities
+from app.models.consumer_activities_model import ConsumerActivities
 from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_decimal, to_bool
 
-async def upsert_advertisement_activities(db: AsyncSession, mongo_doc: dict):
-    stmt=insert(AdvertisementActivities).values(
+async def upsert_consumer_activities(db: AsyncSession, mongo_doc: dict):
+    stmt=insert(ConsumerActivities).values(
         activity_id=to_uuid(mongo_doc.get('activity_id')),
         action_type_code=to_int(mongo_doc.get('action_type_code')),
         action_type_name=mongo_doc.get('action_type_name'),
-        advertisement_id=to_int(mongo_doc.get('advertisement_id')),
-        advertisement_name=mongo_doc.get('advertisement_name'),
+        action_type_detail=mongo_doc.get('action_type_detail'),
         device_type_code=mongo_doc.get('device_type_code'),
         device_type_name=mongo_doc.get('device_type_name'),
         market=mongo_doc.get('market'),
@@ -23,8 +22,7 @@ async def upsert_advertisement_activities(db: AsyncSession, mongo_doc: dict):
             "activity_id": to_uuid(mongo_doc.get('activity_id')),
             "action_type_code": to_int(mongo_doc.get('action_type_code')),
             "action_type_name": mongo_doc.get('action_type_name'),
-            "advertisement_id": to_int(mongo_doc.get('advertisement_id')),
-            "advertisement_name": mongo_doc.get('advertisement_name'),
+            "action_type_detail": mongo_doc.get('action_type_detail'),
             "device_type_code": mongo_doc.get('device_type_code'),
             "device_type_name": mongo_doc.get('device_type_name'),
             "market": mongo_doc.get('market'),

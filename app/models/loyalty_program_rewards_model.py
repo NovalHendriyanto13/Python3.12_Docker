@@ -12,7 +12,7 @@ class LoyaltyProgramRewards(Base):
     offer_id = Column(Integer)
     expires_after_n_days  = Column(Integer)
     is_expiry_time_specified = Column(Boolean)
-    expiry_time_after_activation = = Column(Integer)
+    expiry_time_after_activation = Column(Integer)
     point_value = Column(Integer)
     activation_limit = Column(Integer)
     activation_weight = Column(Integer)

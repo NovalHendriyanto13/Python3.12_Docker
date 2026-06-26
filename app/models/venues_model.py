@@ -7,7 +7,7 @@ class Venues(Base):
     __tablename__ = "mcd_venues"
 
     venue_id = Column(Integer, primary_key=True)
-    venue_external_id
+    venue_external_id = Column(String)
     region_id = Column(Integer)
     market = Column(String)
     name = Column(String)
