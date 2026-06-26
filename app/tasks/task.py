@@ -25,8 +25,9 @@ WATCH_COLLECTIONS = [
     "mcd_stamp_program_reward_transactions",
     "mcd_stamp_program_transactions",
     "mcd_tag_values",
-    "mcd_venues"
+    "mcd_venues",
 
+    "stg_data_changes"
 ]
 
 async def start_tasks():

@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import insert
 from app.models.sales_headers_model import SalesHeaders
 from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_decimal, to_bool
 
-async def upsert_sales_headers(db: AsyncSession, mongo_doc: dict):
+async def upsert_sale_headers(db: AsyncSession, mongo_doc: dict):
     stmt=insert(SalesHeaders).values(
         sale_id=to_uuid(mongo_doc.get('sale_id')),
         pos_transaction_id=to_uuid(mongo_doc.get('pos_transaction_id')),

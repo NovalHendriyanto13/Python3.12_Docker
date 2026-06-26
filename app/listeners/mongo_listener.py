@@ -3,7 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from configs.database import AsyncSessionLocal
 from configs.app_config import mongo_uri, mongo_db
 
-from app.services.mongo.advertisement_activities_mongo import upsert_advertisement_activities
+from app.services.mongo.advertisements_activities_mongo import upsert_advertisement_activities
 from app.services.mongo.advertisements_mongo import upsert_advertisements
 from app.services.mongo.bonus_points_breakdown_mongo import upsert_bonus_points_breakdown
 from app.services.mongo.campaigns_mongo import upsert_campaigns
@@ -26,7 +26,8 @@ from app.services.mongo.sale_headers_mongo import upsert_sale_headers
 from app.services.mongo.stamp_program_reward_transactions_mongo import upsert_stamp_program_reward_transactions
 from app.services.mongo.stamp_program_transactions_mongo import upsert_stamp_program_transactions
 from app.services.mongo.tag_values_mongo import upsert_tag_values
-from app.services.mongo.venues import upsert_venues
+from app.services.mongo.venues_mongo import upsert_venues
+# from app.services.mongo.stg_data_changes import upsert_stg_data_changes
 
 COLLECTION_HANDLERS = {
     "mcd_advertisement_activities": {
@@ -101,6 +102,10 @@ COLLECTION_HANDLERS = {
     "mcd_venues": {
         "upsert": upsert_venues
     },
+    # changes
+    # "stg_data_changes": {
+    #     "upsert": upsert_stg_data_changes
+    # }
 }
 
 async def watch_mongo(tablename: str):
