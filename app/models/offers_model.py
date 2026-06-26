@@ -13,7 +13,6 @@ class Offers(Base):
     market = Column(String, nullable=True)    
     title = Column(String, nullable=True)    
     description = Column(String, nullable=True)
-
     terms_and_conditions = Column(String, nullable=True)
     has_barcode_image = Column(Boolean, nullable=True)
     redemption_limit = Column(Integer, nullable=True)

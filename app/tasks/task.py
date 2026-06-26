@@ -2,19 +2,14 @@ import asyncio
 from app.listeners.mongo_listener import watch_mongo
 
 WATCH_COLLECTIONS = [
-    "mcd_offers",
-    "mcd_consumer",
-    "mcd_advertisements",
-    "mcd_loyalty_points_card_transactions",
-    "mcd_loyalty_stamp_card_transactions",
-    "mcd_loyalty_stamp_card_reward_transactions",
-    "mcd_sales_headers",
     "mcd_advertisement_activities",
+    "mcd_advertisements",
     "mcd_bonus_points_breakdown",
     "mcd_campaigns",
     "mcd_consumer_activities",
     "mcd_consumer_external_ids",
     "mcd_consumer_tags",
+    "mcd_consumers",
     "mcd_gdpr_consumer_consent_events",
     "mcd_gdpr_consumer_consent_snapshot",
     "mcd_loyalty_activities",
@@ -22,10 +17,16 @@ WATCH_COLLECTIONS = [
     "mcd_loyalty_programs",
     "mcd_messages",
     "mcd_offer_activities",
+    "mcd_offers",
+    "mcd_points_program_transactions",
     "mcd_pushmessage_activities",
     "mcd_sale_details",
+    "mcd_sale_headers",
+    "mcd_stamp_program_reward_transactions",
+    "mcd_stamp_program_transactions",
     "mcd_tag_values",
-    "mcd_venues",
+    "mcd_venues"
+
 ]
 
 async def start_tasks():
