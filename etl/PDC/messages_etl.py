@@ -143,8 +143,8 @@ async def extract_and_load():
     print(f"Finished sync {total} rows")
 
 @flow(name="messages-etl")
-async def etl_flow():
+async def etl_messages_flow():
     await extract_and_load()
 
 if __name__=="__main__":
-    asyncio.run(etl_flow())
+    asyncio.run(etl_messages_flow())

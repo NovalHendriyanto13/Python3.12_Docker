@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from configs.database import engine
 from configs.app_config import mongo_uri, mongo_db
-from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid
+from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid, to_decimal
 
 TABLE_NAME="mcd_venues"
 TARGET_TABLE="mcd_venues"
@@ -119,27 +119,27 @@ async def extract_and_load():
     total=0
     async for doc in cursor:
         row=(
-            to_int(doc.get("id")),
-            doc.get("externalid"),
-            doc.get("region_id")),
-            doc.get("market"),
-            doc.get("name"),
-            doc.get("locationlat"),
-            doc.get("locationlong"),
-            doc.get("addressline1"),
-            doc.get("addressline2"),
-            doc.get("addressline3"),
-            doc.get("postcode"),
-            doc.get("venuetypecode"),
-            to_bool(doc.get("ishidden")),
-            doc.get("region"),
-            doc.get("features"),
-            doc.get("extendeddata"),
-            to_bool(doc.get("lab")),
-            to_bool(doc.get("acceptsoffers")),
-            doc.get("timezone"),
-            doc.get("openhours"),
-            to_datetime(doc.get("whenlastupdated"))
+            to_int(doc.get('venue_id')), 
+            (doc.get('venue_external_id')), 
+            to_int(doc.get('region_id')), 
+            (doc.get('market')), 
+            (doc.get('name')), 
+            to_decimal(doc.get('location_lat')), 
+            to_decimal(doc.get('location_long')), 
+            (doc.get('address_line1')), 
+            (doc.get('address_line2')), 
+            (doc.get('address_line3')), 
+            (doc.get('post_code')), 
+            (doc.get('venue_type_code')), 
+            to_bool(doc.get('is_hidden')), 
+            (doc.get('region')), 
+            (doc.get('features')), 
+            (doc.get('extended_data')), 
+            to_bool(doc.get('lab')), 
+            to_bool(doc.get('accepts_offers')), 
+            (doc.get('time_zone')), 
+            (doc.get('open_hours')), 
+            to_datetime(doc.get('when_last_updated'))
         )
         batch.append(row)
         if len(batch)>=chunk_size:
@@ -153,8 +153,8 @@ async def extract_and_load():
     print(f"Finished sync {total} rows")
 
 @flow(name="venues-etl")
-async def etl_flow():
+async def etl_venues_flow():
     await extract_and_load()
 
 if __name__=="__main__":
-    asyncio.run(etl_flow())
+    asyncio.run(etl_venues_flow())

@@ -107,7 +107,7 @@ async def load_chunk_to_postgres(batch:list, columns:list):
             offer_start_time,
             offer_expire_time,
             when_last_updated_utc 
-        FROM temp_loyalty_activities
+        FROM temp_offers
         ON CONFLICT (offer_id) DO UPDATE SET
             offer_id = EXCLUDED.offer_id,
             campaign_id = EXCLUDED.campaign_id,
@@ -265,9 +265,9 @@ async def extract_and_load():
         total+=len(batch)
     print(f"Finished sync {total} rows")
 
-@flow(name="loyalty_activities-etl")
-async def etl_loyalty_activities_flow():
+@flow(name="offers-etl")
+async def etl_offers_flow():
     await extract_and_load()
 
 if __name__=="__main__":
-    asyncio.run(etl_loyalty_activities_flow())
+    asyncio.run(etl_offers_flow())

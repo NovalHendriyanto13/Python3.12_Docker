@@ -27,7 +27,7 @@ from app.services.mongo.stamp_program_reward_transactions_mongo import upsert_st
 from app.services.mongo.stamp_program_transactions_mongo import upsert_stamp_program_transactions
 from app.services.mongo.tag_values_mongo import upsert_tag_values
 from app.services.mongo.venues_mongo import upsert_venues
-# from app.services.mongo.stg_data_changes import upsert_stg_data_changes
+from app.services.mongo.stg_payload_mongo import transform_payload
 
 COLLECTION_HANDLERS = {
     "mcd_advertisement_activities": {
@@ -103,9 +103,9 @@ COLLECTION_HANDLERS = {
         "upsert": upsert_venues
     },
     # changes
-    # "stg_data_changes": {
-    #     "upsert": upsert_stg_data_changes
-    # }
+    "stg_payload": {
+        "upsert": transform_payload
+    }
 }
 
 async def watch_mongo(tablename: str):

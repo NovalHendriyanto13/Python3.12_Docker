@@ -48,8 +48,7 @@ async def load_chunk_to_postgres(batch: list, columns: list):
             date,
             market,
             transaction_source_time_local,
-            plexure_processing_time_utc,
-            internal_id        
+            plexure_processing_time_utc
         )
         SELECT 
             sale_id,
@@ -70,8 +69,7 @@ async def load_chunk_to_postgres(batch: list, columns: list):
             date,
             market,
             transaction_source_time_local,
-            plexure_processing_time_utc,
-            internal_id     
+            plexure_processing_time_utc
         FROM temp_mcd_sales_headers
         ON CONFLICT (sale_id) DO UPDATE SET
             pos_transaction_id = EXCLUDED.pos_transaction_id,
@@ -91,8 +89,7 @@ async def load_chunk_to_postgres(batch: list, columns: list):
             date = EXCLUDED.date,
             market = EXCLUDED.market,
             transaction_source_time_local = EXCLUDED.transaction_source_time_local,
-            plexure_processing_time_utc = EXCLUDED.plexure_processing_time_utc,
-            internal_id = EXCLUDED.internal_id;
+            plexure_processing_time_utc = EXCLUDED.plexure_processing_time_utc;
         """
         await conn.execute(text(upsert_query))
 
@@ -128,8 +125,7 @@ async def extract_and_load_sales_headers_fast():
         "date",
         "market",
         "transaction_source_time_local",
-        "plexure_processing_time_utc",
-        "internal_id"
+        "plexure_processing_time_utc"
     ]
     
     chunk_size = 1000000  # Batasi 1.000.000 data per transaksi database
@@ -158,8 +154,7 @@ async def extract_and_load_sales_headers_fast():
             to_datetime(doc.get("date")),
             (doc.get("market")),
             to_datetime(doc.get("transaction_source_time_local")),
-            to_datetime(doc.get("plexure_processing_time_utc")),
-            doc.get("internal_id")
+            to_datetime(doc.get("plexure_processing_time_utc"))
         )
         batch.append(row)
         

@@ -203,8 +203,8 @@ async def extract_and_load():
     print(f"Finished sync {total} rows")
 
 @flow(name="loyalty_programs-etl")
-async def etl_etl_flow_loyalty_programs_flow():
+async def etl_loyalty_programs_flow():
     await extract_and_load()
 
 if __name__=="__main__":
-    asyncio.run(etl_etl_flow_loyalty_programs_flow())
+    asyncio.run(etl_loyalty_programs_flow())

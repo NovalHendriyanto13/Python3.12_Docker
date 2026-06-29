@@ -168,10 +168,10 @@ async def extract_and_load_consumers_fast():
     print(f"🚀 Bulk Sync Finished! Total {total} consumers successfully upserted.")
 
 @flow(name="mongo-to-postgres-etl", log_prints=True)
-async def etl_consumer_flow():
+async def etl_consumers_flow():
     print("ETL Flow Consumer started...")
     await extract_and_load_consumers_fast()
     print("ETL Flow Consumer finished!")
 
 if __name__ == "__main__":
-    asyncio.run(etl_consumer_flow())
+    asyncio.run(etl_consumers_flow())

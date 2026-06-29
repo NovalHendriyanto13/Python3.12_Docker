@@ -5,9 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from configs.database import engine
 from configs.app_config import mongo_uri, mongo_db
-from app.helpers.app_helper import 
-to_datetime, 
-to_int, to_bool, to_uuid
+from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid
 
 TABLE_NAME="points_program_transactions"
 TARGET_TABLE="points_program_transactions"

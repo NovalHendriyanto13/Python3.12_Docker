@@ -121,8 +121,8 @@ async def extract_and_load():
     print(f"Finished sync {total} rows")
 
 @flow(name="offer_activities-etl")
-async def etl_flow():
+async def etl_offer_activities_flow():
     await extract_and_load()
 
 if __name__=="__main__":
-    asyncio.run(etl_flow())
+    asyncio.run(etl_offer_activities_flow())

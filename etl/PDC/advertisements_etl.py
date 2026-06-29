@@ -194,10 +194,10 @@ async def extract_and_load_advertisements_fast():
     print(f"🚀 Bulk Sync Finished! Total {total} advertisements successfully upserted.")
 
 @flow(name="mongo-to-postgres-etl", log_prints=True)
-async def etl_advertisement_flow():
+async def etl_advertisements_flow():
     print("ETL Flow advertisement started...")
     await extract_and_load_advertisements_fast()
     print("ETL Flow advertisement finished!")
 
 if __name__ == "__main__":
-    asyncio.run(etl_advertisement_flow())
+    asyncio.run(etl_advertisements_flow())
