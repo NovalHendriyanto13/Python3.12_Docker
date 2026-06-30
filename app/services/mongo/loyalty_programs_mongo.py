@@ -1,11 +1,23 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import select
 from app.models.loyalty_programs_model import LoyaltyPrograms
 from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_decimal, to_bool
+from app.services.staging.data_changes_staging import StagingDataChangesService
 
 async def upsert_loyalty_programs(db: AsyncSession, mongo_doc: dict):
-    stmt=insert(LoyaltyPrograms).values(
-        loyalty_program_id=to_int(mongo_doc.get('loyalty_program_id')),
+    loyalty_program_id=to_int(mongo_doc.get('loyalty_program_id'))
+    
+    existing = await db.execute(
+        select(LoyaltyPrograms).where(
+            LoyaltyPrograms.loyalty_program_id == loyalty_program_id
+        )
+    )
+
+    existing_record = existing.scalar_one_or_none()
+
+    new_values = dict(
+        loyalty_program_id=loyalty_program_id,
         campaign_id=to_int(mongo_doc.get('campaign_id')),
         category_id=to_int(mongo_doc.get('category_id')),
         max_instances=to_int(mongo_doc.get('max_instances')),
@@ -35,42 +47,22 @@ async def upsert_loyalty_programs(db: AsyncSession, mongo_doc: dict):
         market=mongo_doc.get('market'),
         start_date=to_datetime(mongo_doc.get('start_date')),
         end_date=to_datetime(mongo_doc.get('end_date')),
-        when_last_updated=to_datetime(mongo_doc.get('when_last_updated')),
-    ).on_conflict_do_update(
-        index_elements=["id"],
-        set_={
-            "loyalty_program_id": to_int(mongo_doc.get('loyalty_program_id')),
-            "campaign_id": to_int(mongo_doc.get('campaign_id')),
-            "category_id": to_int(mongo_doc.get('category_id')),
-            "max_instances": to_int(mongo_doc.get('max_instances')),
-            "extended_data": mongo_doc.get('extended_data'),
-            "name": mongo_doc.get('name'),
-            "title": mongo_doc.get('title'),
-            "sub_title": mongo_doc.get('sub_title'),
-            "description": mongo_doc.get('description'),
-            "instructions": mongo_doc.get('instructions'),
-            "status": to_int(mongo_doc.get('status')),
-            "terms_and_conditions": mongo_doc.get('terms_and_conditions'),
-            "points_required": to_int(mongo_doc.get('points_required')),
-            "days_of_week": mongo_doc.get('days_of_week'),
-            "weighting": to_int(mongo_doc.get('weighting')),
-            "daily_start_time": to_int(mongo_doc.get('daily_start_time')),
-            "daily_end_time": to_int(mongo_doc.get('daily_end_time')),
-            "max_points_per_day": to_int(mongo_doc.get('max_points_per_day')),
-            "apply_initial_points_to_subsequent_cards": to_bool(mongo_doc.get('apply_initial_points_to_subsequent_cards')),
-            "max_points_requests_per_day": to_int(mongo_doc.get('max_points_requests_per_day')),
-            "initial_points": to_int(mongo_doc.get('initial_points')),
-            "is_hidden": to_bool(mongo_doc.get('is_hidden')),
-            "require_ip_whitelisting": to_bool(mongo_doc.get('require_ip_whitelisting')),
-            "loyalty_program_type": to_int(mongo_doc.get('loyalty_program_type')),
-            "points_expiry_days": to_int(mongo_doc.get('points_expiry_days')),
-            "expiry_schedule_details": mongo_doc.get('expiry_schedule_details'),
-            "is_consumer_api_write_accessible": to_bool(mongo_doc.get('is_consumer_api_write_accessible')),
-            "market": mongo_doc.get('market'),
-            "start_date": to_datetime(mongo_doc.get('start_date')),
-            "end_date": to_datetime(mongo_doc.get('end_date')),
-            "when_last_updated": to_datetime(mongo_doc.get('when_last_updated')),
-        }
+        when_last_updated=to_datetime(mongo_doc.get('when_last_updated'))
+    )
+
+    stmt=insert(LoyaltyPrograms).values(**new_values).on_conflict_do_update(
+        index_elements=["loyalty_program_id"],
+        set_=new_values
     )
     await db.execute(stmt)
+
+    if existing_record is not None:
+        StagingDataChangesService(
+            db=db,
+            module_name="mcd_loyalty_programs",
+            module_id=loyalty_program_id,
+            old_data=existing_record,
+            new_data=new_values
+        )
+        
     await db.commit()

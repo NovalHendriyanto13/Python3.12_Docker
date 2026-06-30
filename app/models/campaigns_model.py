@@ -9,7 +9,7 @@ class Campaigns(Base):
     campaign_id = Column(Integer, primary_key=True)
     market = Column(String)
     title = Column(String)
-    campaigns_status = Column(Integer)
+    campaign_status = Column(Integer)
     status = Column(String)
     creation_date = Column(TIMESTAMP(timezone=True))
     modified_date = Column(TIMESTAMP(timezone=True))

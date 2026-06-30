@@ -91,10 +91,10 @@ async def extract_and_load_campaign_fast():
     
     async for doc in cursor:
         row = (
-            to_int(doc.get("id")),
+            to_int(doc.get("mongo_id")),
             doc.get("market"),
             doc.get("title"),
-            campaign_status[doc.get("status")],
+            doc.get("campaign_status"),
             doc.get("status"),
             to_datetime(doc.get("creation_date")),
             to_datetime(doc.get("modfied_date"))

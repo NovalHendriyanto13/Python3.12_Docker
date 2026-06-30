@@ -32,63 +32,43 @@ async def load_chunk_to_postgres(batch: list, columns: list):
         # Merge/Upsert query
         upsert_query = """
         INSERT INTO mcd_advertisement_activities (
-            activity_id,
-            action_type_code,
-            action_type_name,
-            advertisement_id,
-            advertisement_name,
-            device_type_code,
-            device_type_name,
-            market,
-            reporting_id,
-            date,
-            activity_source_time_local,
-            activity_source_time_utc,
-            source_activity_offset,
-            impression_count,
-            click_count,
-            market_id,
-            hour,
-            time_of_processed
+            hour,               
+            sourceactivitytimeutc,
+            sourceactivityoffset,
+            reportingid,
+            devicetype,         
+            timeofprocessed,      
+            marketid,     
+            advertisementid,      
+            advertisementname,    
+            impressioncount,   
+            clickcount         
         )
         SELECT 
-            activity_id,
-            action_type_code,
-            action_type_name,
-            advertisement_id,
-            advertisement_name,
-            device_type_code,
-            device_type_name,
-            market,
-            reporting_id,
-            date,
-            activity_source_time_local,
-            activity_source_time_utc,
-            source_activity_offset,
-            impression_count,
-            click_count,
-            market_id,
-            hour,
-            time_of_processed
+            hour,               
+            sourceactivitytimeutc,
+            sourceactivityoffset,
+            reportingid,
+            devicetype,         
+            timeofprocessed,      
+            marketid,     
+            advertisementid,      
+            advertisementname,    
+            impressioncount,   
+            clickcount
         FROM temp_mcd_advertisement_activities
-        ON CONFLICT (advertisement_id, reporting_id, market_id) DO UPDATE SET
-            action_type_code = EXCLUDED.action_type_code,
-            action_type_name = EXCLUDED.action_type_name,
-            advertisement_id = EXCLUDED.advertisement_id,
-            advertisement_name = EXCLUDED.advertisement_name,
-            device_type_code = EXCLUDED.device_type_code,
-            device_type_name = EXCLUDED.device_type_name,
-            market = EXCLUDED.market,
-            reporting_id = EXCLUDED.reporting_id,
-            date = EXCLUDED.date,
-            activity_source_time_local = EXCLUDED.activity_source_time_local,
-            activity_source_time_utc = EXCLUDED.activity_source_time_utc,
-            source_activity_offset = EXCLUDED.source_activity_offset,
-            impression_count = EXCLUDED.impression_count,
-            click_count = EXCLUDED.click_count,
-            market_id = EXCLUDED.market_id,
-            hour = EXCLUDED.hour,
-            time_of_processed = EXCLUDED.time_of_processed;
+        ON CONFLICT (reportingid, devicetype, marketid, advertisementid) DO UPDATE SET
+            hour = EXCLUDED.hour,           
+            sourceactivitytimeutc = EXCLUDED.sourceactivitytimeutc,
+            sourceactivityoffset = EXCLUDED.sourceactivityoffset,
+            reportingid = EXCLUDED.reportingid,
+            devicetype = EXCLUDED.devicetype,         
+            timeofprocessed = EXCLUDED.timeofprocessed,      
+            marketid = EXCLUDED.marketid,     
+            advertisementid = EXCLUDED.advertisementid,      
+            advertisementname = EXCLUDED.advertisementname,    
+            impressioncount = EXCLUDED.impressioncount,   
+            clickcount = EXCLUDED.clickcount;
         """
         await conn.execute(text(upsert_query))
 
@@ -106,24 +86,17 @@ async def extract_and_load_advertisement_activities_fast():
     cursor = db["mcd_advertisement_activities"].find().batch_size(100000)
     
     columns = [
-        "activity_id",
-        "action_type_code",
-        "action_type_name",
-        "advertisement_id",
-        "advertisement_name",
-        "device_type_code",
-        "device_type_name",
-        "market",
-        "reporting_id",
-        "date",
-        "activity_source_time_local",
-        "activity_source_time_utc",
-        "source_activity_offset",
-        "impression_count",
-        "click_count",
-        "market_id",
         "hour",
-        "time_of_processed"
+        "sourceactivitytimeutc",
+        "sourceactivityoffset",
+        "reportingid",
+        "devicetype",
+        "timeofprocessed",
+        "marketid",
+        "advertisementid",
+        "advertisementname",
+        "impressioncount",
+        "clickcount"
     ]
     
     chunk_size = 1000000  # Batasi 1.000.000 data per transaksi database
@@ -134,24 +107,17 @@ async def extract_and_load_advertisement_activities_fast():
     
     async for doc in cursor:
         row = (
-            uuid.uuid4(),
-            to_int(doc.get("action_type_code")),
-            (doc.get("action_type_name")),
-            to_int(doc.get("advertisementid")),
-            (doc.get("advertisementname")),
-            to_int(doc.get("devicetype")),
-            device_types[to_int(doc.get("devicetype"))],
-            (doc.get("market")),
-            to_uuid(doc.get("reportingid")),
-            to_datetime(doc.get("date")),
-            to_datetime(doc.get("activity_source_time_local")),
-            to_datetime(doc.get("sourceactivitytimeutc")),
-            (doc.get("sourceactivityoffset")),
-            to_int(doc.get("impressioncount")),
-            to_int(doc.get("clickcount")),
-            to_int(doc.get("marketid")),
-            (doc.get("hour")),
-            to_datetime(doc.get("timeofprocessed"))
+            doc.get("hour"),
+            doc.get("sourceactivitytimeutc"),
+            doc.get("sourceactivityoffset"),
+            doc.get("reportingid"),
+            doc.get("devicetype"),
+            doc.get("timeofprocessed"),
+            doc.get("marketid"),
+            doc.get("advertisementid"),
+            doc.get("advertisementname"),
+            doc.get("impressioncount"),
+            doc.get("clickcount")
         )
 
         batch.append(row)
