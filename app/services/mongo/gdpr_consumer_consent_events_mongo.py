@@ -6,9 +6,9 @@ from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_decimal, to_
 from app.services.staging.data_changes_staging import StagingDataChangesService
 
 async def upsert_gdpr_consumer_consent_events(db: AsyncSession, mongo_doc: dict):
-    reporting_id=to_uuid(mongo_doc.get('reporting_id'))
-    market=mongo_doc.get('market')
-    services=mongo_doc.get('services')        
+    reporting_id = to_uuid(mongo_doc.get('reporting_id'))
+    market = mongo_doc.get('market')
+    services = mongo_doc.get('services')        
     
     existing = await db.execute(
         select(GdprConsumerConsentEvents).where(

@@ -45,11 +45,11 @@ async def upsert_sale_details(db: AsyncSession, mongo_doc: dict):
 
     if existing_record is not None:
         StagingDataChangesService(
-            db=db,
-            module_name="mcd_sale_details",
-            module_id=pos_transaction_id + ":" + sale_id + ":" reporting_id,
-            old_data=existing_record,
-            new_data=new_values
+            db = db,
+            module_name = "mcd_sale_details",
+            module_id = (pos_transaction_id + ":" + sale_id + ":" + reporting_id),
+            old_data = existing_record,
+            new_data = new_values
         )
         
     await db.commit()

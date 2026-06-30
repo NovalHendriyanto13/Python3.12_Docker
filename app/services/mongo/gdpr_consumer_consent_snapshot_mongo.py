@@ -6,9 +6,9 @@ from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_decimal, to_
 from app.services.staging.data_changes_staging import StagingDataChangesService
 
 async def upsert_gdpr_consumer_consent_snapshot(db: AsyncSession, mongo_doc: dict):
-     reporting_id=to_uuid(mongo_doc.get('reporting_id'))
-    market=mongo_doc.get('market')
-    services=mongo_doc.get('services')
+    reporting_id = to_uuid(mongo_doc.get('reporting_id'))
+    market = mongo_doc.get('market')
+    services = mongo_doc.get('services')
     
     existing = await db.execute(
         select(GdprConsumerConsentSnapshot).where(
@@ -37,11 +37,11 @@ async def upsert_gdpr_consumer_consent_snapshot(db: AsyncSession, mongo_doc: dic
 
     if existing_record is not None:
         StagingDataChangesService(
-            db=db,
-            module_name="mcd_gdpr_consumer_consent_snapshot",
-            module_id=reporting_id + ":" + market + ":" + services,
-            old_data=existing_record,
-            new_data=new_values
+            db = db,
+            module_name = "mcd_gdpr_consumer_consent_snapshot",
+            module_id = (reporting_id + ":" + market + ":" + services),
+            old_data = existing_record,
+            new_data = new_values
         )
         
     await db.commit()

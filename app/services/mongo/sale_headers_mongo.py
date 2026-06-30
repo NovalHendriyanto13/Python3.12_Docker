@@ -17,7 +17,7 @@ async def upsert_sale_headers(db: AsyncSession, mongo_doc: dict):
     existing_record = existing.scalar_one_or_none()
 
     new_values = dict(
-        sale_id=sale_id
+        sale_id=sale_id,
         pos_transaction_id=to_uuid(mongo_doc.get('pos_transaction_id')),
         reporting_id=to_uuid(mongo_doc.get('reporting_id')),
         offer_ids=mongo_doc.get('offer_ids'),
