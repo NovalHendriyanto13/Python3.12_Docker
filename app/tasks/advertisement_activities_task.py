@@ -1,14 +1,14 @@
-# import sys
-# import os
-# import asyncio
+import sys
+import os
+import asyncio
 
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from prefect import flow, task, get_run_logger
 from fastapi.concurrency import run_in_threadpool
 from datetime import date, timedelta
 from configs.databricks import databricks_fetch_data
-from configs.mongo import connect_to_mongo, close_mongo_connection, insert_mongo
+from configs.mongo import connect_to_mongo, close_mongo_connection, upsert_mongo
 from configs.app_config import timedelta_days
 
 tablename = "advertisement_activities"
@@ -55,24 +55,24 @@ async def insert_to_mongo_task(rows: list):
         logger.warning("No data to insert, skipping")
         return 0
 
-    result = await insert_many(tablename, rows)
+    result = await upsert_mongo(tablename, rows, unique_key="activity_id")
 
-    logger.info(f"Inserted {len(result.inserted_ids)} records in collection {tablename}")
-    return len(result.inserted_ids)
+    logger.info(f"Inserted {result} records in collection {tablename}")
+    return result
 
-@flow(name="databricks_to_mongo_sync", log_prints=True)
-async def databricks_to_mongo_sync():
-    ogger = get_run_logger()
+@flow(name="databricks_to_mongo_advertisement_activities_sync", log_prints=True)
+async def databricks_to_mongo_advertisement_activities_sync():
+    logger = get_run_logger()
     logger.info("=== Sync flow started ===")
 
     await connect_to_mongo()
 
     try:
         rows = await fetch_data_task()
-        inserted_count = await insert_to_mongo_task(rows)
+        upserted_count = await insert_to_mongo_task(rows)
 
         logger.info("=== Sync flow completed ===")
-        return {"status": "success", "inserted": inserted_count}
+        return {"status": "success", "upsert": upserted_count}
 
     except Exception as e:
         logger.error(f"Sync flow failed: {e}")
@@ -80,3 +80,6 @@ async def databricks_to_mongo_sync():
 
     finally:
         await close_mongo_connection()
+
+if __name__ == "__main__":
+    asyncio.run(databricks_to_mongo_advertisement_activities_sync())

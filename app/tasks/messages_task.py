@@ -1,14 +1,92 @@
 import sys, os, asyncio
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from prefect import flow, task
-from motor.motor_asyncio import AsyncIOMotorClient
-from sqlalchemy import text
-from configs.database import engine
-from configs.app_config import mongo_uri, mongo_db
-from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid
 
-TABLE_NAME="mcd_messages"
-TARGET_TABLE="mcd_messages"
+from prefect import flow, task, get_run_logger
+from fastapi.concurrency import run_in_threadpool
+from datetime import date, timedelta
+from configs.databricks import databricks_fetch_data
+from configs.mongo import connect_to_mongo, close_mongo_connection, upsert_mongo
+from configs.app_config import timedelta_days
+
+tablename = "messages"
+past_date = date.today() -  timedelta(days=timedelta_days)
+
+@task(retries=3, retry_delay_seconds=10, log_prints=True, name="fetch_messages")
+async def fetch_data_task():
+    logger = get_run_logger()
+    logger.info(f"Fetching data from messages")
+
+    columns=[
+        'message_id', 
+        'market', 
+        'status', 
+        'trigger_type_code', 
+        'name', 
+        'channel_type', 
+        'campaign_id', 
+        'subject', 
+        'body', 
+        'email_text_body', 
+        'offer_id', 
+        'recurring_type_code', 
+        'daily_start_time', 
+        'daily_end_time', 
+        'time_frame_type', 
+        'date_modified', 
+        'date_created', 
+        'time_frame_start_date', 
+        'time_frame_end_date'
+    ]
+
+    rows = await run_in_threadpool(
+        databricks_fetch_data,
+        tablename, 
+        columns = columns,
+        criteria = {
+            "date_modified": {"op": ">=", "value": past_date}
+        }
+    )
+    
+    logger.info(f"Fetched {len(rows)} rows from Databricks")
+    print(f"Fetched {len(rows)} rows from Databricks")
+    return rows
+
+@task(retries=2, retry_delay_seconds=10, name="insert_to_mongo")
+async def insert_to_mongo_task(rows: list):
+    logger = get_run_logger()
+
+    if not rows:
+        logger.warning("No data to insert, skipping")
+        return 0
+
+    result = await upsert_mongo(tablename, rows, unique_key="message_id")
+
+    logger.info(f"Inserted {result} records in collection {tablename}")
+    return result
+
+@flow(name="databricks_to_mongo_messages_sync", log_prints=True)
+async def databricks_to_mongo_messages_sync():
+    logger = get_run_logger()
+    logger.info("=== Sync flow started ===")
+
+    await connect_to_mongo()
+
+    try:
+        rows = await fetch_data_task()
+        upserted_count = await insert_to_mongo_task(rows)
+
+        logger.info("=== Sync flow completed ===")
+        return {"status": "success", "inserted": upserted_count}
+
+    except Exception as e:
+        logger.error(f"Sync flow failed: {e}")
+        raise
+
+    finally:
+        await close_mongo_connection()
+
+if __name__ == "__main__":
+    asyncio.run(databricks_to_mongo_messages_sync())
 
 async def load_chunk_to_postgres(batch:list, columns:list):
     async with engine.begin() as conn:
@@ -85,27 +163,7 @@ async def extract_and_load():
     client=AsyncIOMotorClient(mongo_uri)
     db=client[mongo_db]
     cursor=db["mcd_messages"].find().batch_size(100000)
-    columns=[
-        'message_id', 
-        'market', 
-        'status', 
-        'trigger_type_code', 
-        'name', 
-        'channel_type', 
-        'campaign_id', 
-        'subject', 
-        'body', 
-        'email_text_body', 
-        'offer_id', 
-        'recurring_type_code', 
-        'daily_start_time', 
-        'daily_end_time', 
-        'time_frame_type', 
-        'date_modified', 
-        'date_created', 
-        'time_frame_start_date', 
-        'time_frame_end_date'
-    ]
+    
     batch=[]
     chunk_size=1000000
     total=0

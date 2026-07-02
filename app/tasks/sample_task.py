@@ -78,3 +78,6 @@ async def databricks_to_mongo_sync():
 
     finally:
         await close_mongo_connection()
+
+if __name__ == "__main__":
+    asyncio.run(databricks_to_mongo_sync())
