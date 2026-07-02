@@ -14,3 +14,6 @@ prefect>=2.16.0
 # Configuration & Validation
 python-dotenv>=1.0.0
 pydantic>=2.6.0
+
+# Databricks
+databricks-sql-connector==3.4.0
