@@ -5,6 +5,7 @@ from app.tasks.task import start_tasks, stop_tasks
 import configs.app_config as appConfig
 from configs.database import Base, engine
 import exceptions.custom_http_exception as CustomHttpException
+import routes.routes as routers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI):
     await stop_tasks(tasks)
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(routers.router)
 
 @app.get('/')
 async def root():

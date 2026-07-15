@@ -1,7 +1,8 @@
 import asyncio
 
 from configs.database import Base, engine
-import app.models
+# import app.models
+import app.models.datamart
 
 async def create_tables():
     async with engine.begin() as conn:

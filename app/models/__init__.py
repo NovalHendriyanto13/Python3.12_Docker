@@ -22,3 +22,5 @@ from .stamp_program_reward_transactions_model import StampProgramRewardTransacti
 from .stamp_program_transactions_model import StampProgramTransactions
 from .tag_values_model import TagValues
 from .venues_model import Venues
+from .dim_consumer_model import DimConsumers
+from .dim_date_model import DimDate
