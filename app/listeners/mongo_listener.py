@@ -29,6 +29,8 @@ from app.services.mongo.tag_values_mongo import upsert_tag_values
 from app.services.mongo.venues_mongo import upsert_venues
 from app.services.mongo.stg_data_changes_mongo import upsert_stg_data_changes
 
+from app.services.mongo.sales_mongo import upsert_sales
+
 COLLECTION_HANDLERS = {
     "mcd_advertisement_activities": {
         "upsert": upsert_advertisement_activities
