@@ -15,6 +15,7 @@ from app.helpers.app_helper import get_date_range
 @task(retries=3, retry_delay_seconds=10, log_prints=True, cache_policy=NO_CACHE)
 async def extract_and_load_sales(db: AsyncSession):
     start_date, end_date = get_date_range('2026-06-01', '2026-06-30')
+    print("==========================", start_date, end_date)
     await sales_summary(db, start_date, end_date)
         
     print(f"🚀 Bulk Sync Finished! the process successfully upserted.")

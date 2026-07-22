@@ -111,3 +111,24 @@ def to_utc_datetime(dt: datetime) -> datetime:
     else:
         dt = dt.astimezone(timezone.utc)
     return dt
+
+def to_iso_z(value: Union[str, datetime], fmt: str = "%Y-%m-%d") -> str:
+    if isinstance(value, str):
+        dt = datetime.strptime(value, fmt)
+        dt = dt.replace(tzinfo=timezone.utc)
+    elif isinstance(value, datetime):
+        dt = value.astimezone(timezone.utc) if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    else:
+        raise TypeError(f"Expected str or datetime, got {type(value).__name__}")
+
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.") + f"{dt.microsecond // 1000:03d}Z"
+
+def to_date_obj(d: Union[str, date, datetime]) -> date:
+    """Normalize a string, date, or datetime into a plain date object."""
+    if isinstance(d, datetime):
+        return d.date()
+    if isinstance(d, date):
+        return d
+    if isinstance(d, str):
+        return datetime.strptime(d, "%Y-%m-%d").date()
+    raise TypeError(f"Cannot convert {type(d).__name__} to date")
