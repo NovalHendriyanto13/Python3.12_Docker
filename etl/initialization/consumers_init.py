@@ -9,14 +9,12 @@ from prefect import flow, task
 from prefect.cache_policies import NO_CACHE
 from sqlalchemy.ext.asyncio import AsyncSession
 from configs.database import get_session
-from app.services.mongo.sales_mongo import sales_summary, consumer_sales
-from app.helpers.app_helper import get_date_range
+from app.services.mongo.consumers_mongo import consumers_init
 
 @task(retries=3, retry_delay_seconds=10, log_prints=True, cache_policy=NO_CACHE)
-async def extract_and_load_sales(db: AsyncSession):
+async def extract_and_load_consumer(db: AsyncSession):
     try:
-        start_date, end_date = get_date_range('2023-01-01', '2026-06-30')
-        await consumer_sales(db, start_date, end_date)
+        await consumers_init(db)
         
         await db.commit()
         print(f"🚀 Bulk Sync Finished! the process successfully upserted.")
@@ -25,12 +23,12 @@ async def extract_and_load_sales(db: AsyncSession):
         raise
 
 @flow(name="mongo-to-postgres-etl", log_prints=True)
-async def etl_sales_flow():
-    print("ETL Flow sales started...")
+async def etl_consumers_flow():
+    print("ETL Flow consumers started...")
     async with get_session() as db:
-        await extract_and_load_sales(db)
+        await extract_and_load_consumer(db)
 
-    print("ETL Flow sales finished!")
+    print("ETL Flow consumers finished!")
 
 if __name__ == "__main__":
-    asyncio.run(etl_sales_flow())
+    asyncio.run(etl_consumers_flow())

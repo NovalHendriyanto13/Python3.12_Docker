@@ -98,6 +98,65 @@ async def sales_summary(
     if not matched_data:
         return None
 
+    upsert = await _upsert_batch(
+        db=db,
+        model=FactSalesSummary,
+        data_list=matched_data,
+        index_elements=["date_key"],
+        exclude_from_update=["sales_summary_key"]
+    )
+
+    return upsert
+
+async def consumer_sales(
+    db: AsyncSession,
+    start_of_day: datetime, 
+    end_of_day: datetime
+):
+    pipeline = [
+        {
+            "$match": {
+                # "saledate": {"$gte": start_of_day, "$lt": end_of_day}
+                "dateoccurred": {"$gte": to_iso_z(start_of_day), "$lt": to_iso_z(end_of_day)}
+            }
+        },
+        {
+            "$group": {
+                "_id": "$reportingid",
+                "total_visit": {"$sum": 1},
+            }
+        }
+    ]
+    print("---------pipeline", pipeline)
+    cursor = mongo_conn["mcd_sale_headers"].aggregate(pipeline)
+    agg_result = await cursor.to_list()
+
+    print("=================", agg_result)
+
+    # if not agg_result:
+    #     return None
+
+    # summary = agg_result[0]
+
+    # # get date key
+    # date_key = get_dim_key(start_of_day)
+
+        if dim_date is None:
+            print(f"WARNING: no dim_date found for {date_only}")
+            continue
+
+        matched_data.append({
+            "date_key": dim_date.date_key,  # adjust field name to match your DimDates model
+            "total_amount": r["total_amount"],
+            "gross_amount": r["gross_amount"],
+            "tax_total_amount": r["tax_total_amount"],
+            "before_discount_tax_total_amount": r["before_discount_tax_total_amount"],
+            "before_discount_total_amount": r["before_discount_total_amount"],
+        })
+
+    if not matched_data:
+        return None
+
     await _upsert_batch(
         db=db,
         model=FactSalesSummary,

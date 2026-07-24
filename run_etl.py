@@ -8,6 +8,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from prefect import flow
 from configs.app_config import etl_source
 from etl.initialization.sales_init import etl_sales_flow
+from etl.initialization.consumers_init import etl_consumers_flow
+from etl.initialization.venues_init import etl_venues_flow
 
 @flow(name="master-etl", log_prints=True)
 async def master_flow():
@@ -91,7 +93,11 @@ async def master_flow():
 
     # Jalankan semua PARALLEL sekaligus
     await asyncio.gather(
-        etl_sales_flow(),
+        # etl_sales_flow(),
+        etl_consumers_flow(),
+        etl_venues_flow(),
+
+
         # etl_advertisement_activities_flow(),
         # etl_advertisements_flow(),
         # etl_bonus_points_breakdown_flow(),

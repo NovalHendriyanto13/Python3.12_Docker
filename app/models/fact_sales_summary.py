@@ -5,7 +5,7 @@ class FactSalesSummary(Base):
     __tablename__ = "fact_sales_summary"
     
     sales_summary_key = Column(Integer, primary_key=True, autoincrement=True)
-    date_key = Column(Integer, nullable=True)
+    date_key = Column(Integer, unique=True, nullable=True)
     total_amount = Column(Numeric(10, 0))
     gross_amount = Column(Numeric(10, 0))
     tax_total_amount = Column(Numeric(10, 0))
