@@ -132,3 +132,7 @@ def to_date_obj(d: Union[str, date, datetime]) -> date:
     if isinstance(d, str):
         return datetime.strptime(d, "%Y-%m-%d").date()
     raise TypeError(f"Cannot convert {type(d).__name__} to date")
+
+def _chunked(iterable, size):
+    for i in range(0, len(iterable), size):
+        yield iterable[i:i + size]

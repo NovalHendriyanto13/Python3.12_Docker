@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from configs.database import get_session
 from app.services.mongo.consumers_mongo import consumers_init
 
-@task(retries=3, retry_delay_seconds=10, log_prints=True, cache_policy=NO_CACHE)
+@task(retries=1, retry_delay_seconds=10, log_prints=True, cache_policy=NO_CACHE)
 async def extract_and_load_consumer(db: AsyncSession):
     try:
         await consumers_init(db)

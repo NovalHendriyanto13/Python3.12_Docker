@@ -18,10 +18,17 @@ async def upsert_consumers(db: AsyncSession, mongo_doc: dict):
 
     existing_record = existing.scalar_one_or_none()
 
+    doc_external = mongo_conn["mcd_consumer_external_ids"].find_one({"reporting_id": reporting_id})
+    external_id = None
+    if doc_external:
+        external_id = doc_external.get("external_id")
+
     new_values = dict(
         reporting_id=to_uuid(mongo_doc.get('reporting_id')),
+        consumer_external_id=external_id,
         market=mongo_doc.get('market'),
         full_name=mongo_doc.get('full_name'),
+        phone_number=mongo_doc.get('phone_number'),
         email_address=mongo_doc.get('email_address'),
         gender=mongo_doc.get('gender'),
         date_of_birth=to_datetime(mongo_doc.get('date_of_birth')),
@@ -65,7 +72,27 @@ async def consumers_init(
         if last_id is not None:
             current_query["_id"] = { "$gt": last_id }
 
-        cursor = mongo_conn["mcd_consumer"].find(current_query).sort("_id", 1).limit(batch_size)
+        pipeline = [
+            { "$match": current_query },
+            { "$sort": { "_id": 1 }},
+            { "$limit": batch_size },
+            {
+                "$lookup": {
+                    "from": "mcd_consumer_external_ids",
+                    "localField": "reportingid",
+                    "foreignField": "reporting_id",
+                    "as": "external_info"
+                }
+            },
+            {
+                "$unwind": {
+                    "path": "$external_info",
+                    "preserveNullAndEmptyArrays": True
+                }
+            }
+        ]
+
+        cursor = mongo_conn["mcd_consumer"].aggregate(pipeline)
         result = await cursor.to_list(length=batch_size)
 
         if not result:
@@ -74,8 +101,10 @@ async def consumers_init(
         data_list = [
             {
                 "reporting_id": to_uuid(mongo_doc.get('reportingid')),
+                "consumer_external_id": (mongo_doc.get('external_info') or {}).get('external_id'),
                 "market": mongo_doc.get('market'),
                 "full_name": mongo_doc.get('fullname'),
+                "phone_number": mongo_doc.get('phone_number'),
                 "email_address": mongo_doc.get('emailaddress'),
                 "gender": mongo_doc.get('gender'),
                 "date_of_birth": to_datetime(mongo_doc.get('dateofbirth')),
@@ -89,13 +118,19 @@ async def consumers_init(
             }
             for mongo_doc in result
         ]
-        upsert = await _upsert_batch(
-            db=db,
-            model=DimConsumers,
-            data_list=data_list,
-            index_elements=["reporting_id"],
-            exclude_from_update=["reporting_id"]
-        )
+        
+        try:
+            upsert = await _upsert_batch(
+                db=db,
+                model=DimConsumers,
+                data_list=data_list,
+                index_elements=["reporting_id"],
+                exclude_from_update=["reporting_id"]
+            )
+            await db.commit()
+        except Exception:
+            await db.rollback()
+            raise 
 
         last_id = result[-1]["_id"]
 

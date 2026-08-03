@@ -13,14 +13,8 @@ from app.services.mongo.venues_mongo import venues_init
 
 @task(retries=3, retry_delay_seconds=10, log_prints=True, cache_policy=NO_CACHE)
 async def extract_and_load_venue(db: AsyncSession):
-    try:
-        await venues_init(db)
-        
-        await db.commit()
-        print(f"🚀 Bulk Sync Finished! the process successfully upserted.")
-    except Exception:
-        await db.rollback()
-        raise
+    await venues_init(db)
+    await db.commit()
 
 @flow(name="mongo-to-postgres-etl", log_prints=True)
 async def etl_venues_flow():

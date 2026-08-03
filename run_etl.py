@@ -93,10 +93,9 @@ async def master_flow():
 
     # Jalankan semua PARALLEL sekaligus
     await asyncio.gather(
-        # etl_sales_flow(),
-        etl_consumers_flow(),
-        etl_venues_flow(),
-
+        # etl_consumers_flow(),
+        # etl_venues_flow(),
+        etl_sales_flow(),
 
         # etl_advertisement_activities_flow(),
         # etl_advertisements_flow(),

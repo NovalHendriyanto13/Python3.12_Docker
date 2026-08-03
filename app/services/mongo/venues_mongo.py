@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import select
+from configs.mongo import mongo_conn
 from app.models.dim_venues_model import DimVenues
 from app.helpers.app_helper import to_int, to_bool
 from app.helpers.db_helper import _upsert_batch
@@ -9,7 +10,7 @@ async def upsert_venues(db: AsyncSession, mongo_doc: dict):
     venue_id = to_int(mongo_doc.get('venue_id'))
 
     new_values = dict(
-        venue_id=venue_id,
+        venue_key=venue_id,
         venue_external_id=mongo_doc.get('venue_external_id'),
         market=mongo_doc.get('market'),
         name=mongo_doc.get('name'),
@@ -48,8 +49,8 @@ async def venues_init(
 
         data_list = [
             {
-                "venue_id": to_int(mongo_doc.get('venue_id')),
-                "venue_external_id": mongo_doc.get('venue_external_id'),
+                "venue_key": to_int(mongo_doc.get('id')),
+                "venue_external_id": mongo_doc.get('externalid'),
                 "market": mongo_doc.get('market'),
                 "name": mongo_doc.get('name'),
                 "venue_type_code": mongo_doc.get('venue_type_code'),
@@ -58,15 +59,23 @@ async def venues_init(
             }
             for mongo_doc in result
         ]
-        upsert = await _upsert_batch(
-            db=db,
-            model=DimVenues,
-            data_list=data_list,
-            index_elements=["venue_id"],
-            exclude_from_update=["venue_id"]
-        )
+        try:
+            upsert = await _upsert_batch(
+                db=db,
+                model=DimVenues,
+                data_list=data_list,
+                index_elements=["venue_key"],
+                exclude_from_update=["venue_key"]
+            )
 
-        last_id = result[-1]["_id"]
+            last_id = result[-1]["_id"]
 
-        if len(result) < batch_size:
-            break
+            if len(result) < batch_size:
+                break
+            
+            await db.commit()
+            print(f"🚀 Bulk Sync Finished! the process successfully upserted.")
+        except Exception:
+            await db.rollback()
+            raise
+        

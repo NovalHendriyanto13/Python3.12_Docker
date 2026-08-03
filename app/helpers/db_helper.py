@@ -39,14 +39,14 @@ async def _upsert_batch(
 
     return len(data_list)
 
-async def _get_dim_key(db: AsyncSession, target_date: datetime):
+async def _get_dim_date_key(db: AsyncSession, target_date: datetime):
     stmt = select(DimDate.date_key).where(DimDate.full_date == target_date)
     result = await db.execute(stmt)
     data_key = result.scalar_one_or_one()
 
     return data_key
 
-async def _get_dim_key_list(db: AsyncSession, target_dates: list):
+async def _get_dim_key_date_list(db: AsyncSession, target_dates: list):
     try:
         date_objs = [to_date_obj(d) for d in target_dates]
         stmt = select(DimDate).where(DimDate.full_date.in_(date_objs))

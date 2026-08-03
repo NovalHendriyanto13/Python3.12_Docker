@@ -6,9 +6,11 @@ import uuid
 class DimConsumers(Base):
     __tablename__ = "dim_consumers"
     
-    reporting_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  
+    reporting_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    consumer_external_id = Column(String, nullable=True)
     market = Column(String, nullable=True)
     full_name = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)
     email_address = Column(String, nullable=True)
     gender = Column(String, nullable=True)
     date_of_birth = Column(Date, nullable=True)

@@ -25,4 +25,6 @@ from .venues_model import Venues
 # DataMart
 from .dim_consumer_model import DimConsumers
 from .dim_date_model import DimDate
-from .fact_consumer_sales import FactConsumerSales
+from .dim_venues_model import DimVenues
+from .fact_sales_summary import FactSalesSummary
+from .fact_consumer_sales_summary import FactConsumerSalesSummary
