@@ -28,3 +28,5 @@ from .dim_date_model import DimDate
 from .dim_venues_model import DimVenues
 from .fact_sales_summary import FactSalesSummary
 from .fact_consumer_sales_summary import FactConsumerSalesSummary
+from .fact_consumer_visit_summary import FactConsumerVisitSummary
+from .fact_consumer_sales_header_summary import FactConsumerSalesHeaderSummary

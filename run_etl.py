@@ -10,6 +10,7 @@ from configs.app_config import etl_source
 from etl.initialization.sales_init import etl_sales_flow
 from etl.initialization.consumers_init import etl_consumers_flow
 from etl.initialization.venues_init import etl_venues_flow
+from etl.initialization.visit_init import etl_visit_flow
 
 @flow(name="master-etl", log_prints=True)
 async def master_flow():
@@ -96,6 +97,7 @@ async def master_flow():
         # etl_consumers_flow(),
         # etl_venues_flow(),
         etl_sales_flow(),
+        # etl_visit_flow(),
 
         # etl_advertisement_activities_flow(),
         # etl_advertisements_flow(),
