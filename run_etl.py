@@ -11,6 +11,7 @@ from etl.initialization.sales_init import etl_sales_flow
 from etl.initialization.consumers_init import etl_consumers_flow
 from etl.initialization.venues_init import etl_venues_flow
 from etl.initialization.visit_init import etl_visit_flow
+from etl.initialization.app_activity_init import etl_app_activity_flow
 
 @flow(name="master-etl", log_prints=True)
 async def master_flow():
@@ -96,8 +97,9 @@ async def master_flow():
     await asyncio.gather(
         # etl_consumers_flow(),
         # etl_venues_flow(),
-        etl_sales_flow(),
+        # etl_sales_flow(),
         # etl_visit_flow(),
+        etl_app_activity_flow(),
 
         # etl_advertisement_activities_flow(),
         # etl_advertisements_flow(),

@@ -22,6 +22,5 @@ async def seed_current_year() -> int:
     end_date = date(target_year, 12, 31)
     return await seed_date_range(start_date, end_date)
 
-
 if __name__ == "__main__":
     asyncio.run(seed_current_year())
