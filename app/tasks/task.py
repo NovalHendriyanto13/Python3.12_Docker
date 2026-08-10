@@ -19,6 +19,7 @@ WATCH_COLLECTIONS = [
     "mcd_offer_activities",
     "mcd_offers",
     "mcd_points_program_transactions",
+    "mcd_products",
     "mcd_pushmessage_activities",
     "mcd_sale_details",
     "mcd_sale_headers",

@@ -44,6 +44,14 @@ def to_decimal(val):
     except (ValueError, TypeError):
         return None
 
+_UUID_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_DNS, "mcd_cdp.processor_python")
+
+def to_deterministic_uuid(*parts) -> uuid.UUID:
+    """Build a stable UUID from natural-key parts, so FK keys can be derived
+    without a DB round-trip and stay identical across re-runs."""
+    key = "|".join("" if p is None else str(p) for p in parts)
+    return uuid.uuid5(_UUID_NAMESPACE, key)
+
 def to_bool(val):
     if val is None or val == "":
         return None

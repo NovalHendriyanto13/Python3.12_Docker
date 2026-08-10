@@ -20,6 +20,7 @@ from app.services.mongo.messages_mongo import upsert_messages
 from app.services.mongo.offer_activities_mongo import upsert_offer_activities
 from app.services.mongo.offers_mongo import upsert_offers
 from app.services.mongo.points_program_transactions_mongo import upsert_points_program_transactions
+from app.services.mongo.product_mongo import upsert_products
 from app.services.mongo.pushmessage_activities_mongo import upsert_pushmessage_activities
 from app.services.mongo.sale_details_mongo import upsert_sale_details
 from app.services.mongo.sale_headers_mongo import upsert_sale_headers
@@ -82,6 +83,9 @@ COLLECTION_HANDLERS = {
     },
     "mcd_points_program_transactions": {
         "upsert": upsert_points_program_transactions
+    },
+    "mcd_products": {
+        "upsert": upsert_products
     },
     "mcd_pushmessage_activities": {
         "upsert": upsert_pushmessage_activities
