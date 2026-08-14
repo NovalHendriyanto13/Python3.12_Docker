@@ -19,7 +19,7 @@ async def upsert_sales(db: AsyncSession, mongo_doc: dict, is_init: bool = False)
     try:
         await sales_summary(db, start_datetime, end_datetime)
         time.sleep(5)
-        await consumer_sales_summay(db, start_datetime, end_datetime)
+        await consumer_sales_summary(db, start_datetime, end_datetime)
         time.sleep(5)
         await consumer_sales_header_summary(db, start_datetime, end_datetime)
         
@@ -74,10 +74,11 @@ async def sales_summary(
                 "tax_total_amount": {"$sum": "$taxtotalamount_num"},
                 "before_discount_tax_total_amount": {"$sum": "$beforediscounttaxtotalamount_num"},
                 "before_discount_total_amount": {"$sum": "$beforediscounttotalamount_num"},
+                "guest_count": {"$sum": 1},
             }
         }
     ]
-    cursor = mongo_conn["mcd_sale_headers"].aggregate(pipeline)
+    cursor = mongo_conn["mcd_sales_headers"].aggregate(pipeline)
     agg_result = await cursor.to_list()
 
     if not agg_result:
@@ -108,6 +109,7 @@ async def sales_summary(
             "tax_total_amount": r["tax_total_amount"],
             "before_discount_tax_total_amount": r["before_discount_tax_total_amount"],
             "before_discount_total_amount": r["before_discount_total_amount"],
+            "guest_count": r["guest_count"],
         })
 
     if not matched_data:
@@ -171,11 +173,12 @@ async def consumer_sales_summary(
                 "tax_total_amount": {"$sum": "$taxtotalamount_num"},
                 "before_discount_tax_total_amount": {"$sum": "$beforediscounttaxtotalamount_num"},
                 "before_discount_total_amount": {"$sum": "$beforediscounttotalamount_num"},
+                "guest_count": {"$sum": 1},
             }
         }
     ]
 
-    cursor = mongo_conn["mcd_sale_headers"].aggregate(pipeline)
+    cursor = mongo_conn["mcd_sales_headers"].aggregate(pipeline)
     agg_result = await cursor.to_list()
 
     if not agg_result:
@@ -185,7 +188,7 @@ async def consumer_sales_summary(
 
     # get date key
     date_keys = await _get_dim_key_date_list(db, unique_dates)
-    
+
     dim_dates_map = {
         d.full_date.strftime("%Y-%m-%d") if hasattr(d.full_date, "strftime") else d.full_date: d
         for d in date_keys
@@ -247,6 +250,7 @@ async def consumer_sales_summary(
             "tax_total_amount": r["tax_total_amount"],
             "before_discount_tax_total_amount": r["before_discount_tax_total_amount"],
             "before_discount_total_amount": r["before_discount_total_amount"],
+            "guest_count": r["guest_count"],
         })
 
     if not matched_data:
@@ -331,7 +335,7 @@ async def consumer_sales_header_summary(
         }
     ]
 
-    cursor = mongo_conn["mcd_sale_headers"].aggregate(pipeline)
+    cursor = mongo_conn["mcd_sales_headers"].aggregate(pipeline)
     agg_result = await cursor.to_list()
 
     if not agg_result:

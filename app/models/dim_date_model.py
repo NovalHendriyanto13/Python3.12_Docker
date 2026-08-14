@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Date, SmallInteger, Integer
+from sqlalchemy import Column, String, Date, SmallInteger, Integer, Index
 from configs.database import Base
 import uuid
 

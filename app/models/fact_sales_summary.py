@@ -11,3 +11,4 @@ class FactSalesSummary(Base):
     tax_total_amount = Column(Numeric(10, 0))
     before_discount_tax_total_amount = Column(Numeric(10, 0))
     before_discount_total_amount = Column(Numeric(10, 0))
+    guest_count = Column(Integer)

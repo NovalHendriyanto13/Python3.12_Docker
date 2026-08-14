@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, Integer
+from sqlalchemy import Column, String, Boolean, Integer, Index
 from configs.database import Base
 
 class DimVenues(Base):
@@ -11,3 +11,7 @@ class DimVenues(Base):
     venue_type_code = Column(String)
     is_hidden = Column(Boolean)
     region = Column(String)
+
+    __table_args__ = (
+        Index("ix_venue_external_id", "venue_external_id"),
+    )
