@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, UniqueConstraint
+from sqlalchemy import Column, String, Integer, UniqueConstraint, Index
 from configs.database import Base
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -14,4 +14,6 @@ class FactConsumerVisitSummary(Base):
 
     __table_args__ = (
         UniqueConstraint("date_key", "venue_key", "consumer_key", name="uq_fact_consumer_visit_summary_date_venue_consumer"),
+        Index("ix_fact_consumer_visit_summary_consumer", "consumer_key"),
+        Index("ix_fact_consumer_visit_summary_date", "date_key")
     )
