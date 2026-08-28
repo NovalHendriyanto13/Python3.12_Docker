@@ -100,8 +100,8 @@ async def master_flow():
         # etl_venues_flow(),
         # etl_sales_flow(),
         # etl_visit_flow(),
-        etl_app_activity_flow(),
-        # etl_product_flow(),
+        # etl_app_activity_flow(),
+        etl_product_flow(),
 
         # etl_advertisement_activities_flow(),
         # etl_advertisements_flow(),

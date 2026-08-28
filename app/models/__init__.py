@@ -26,6 +26,7 @@ from .venues_model import Venues
 from .dim_consumer_model import DimConsumers
 from .dim_date_model import DimDate
 from .dim_venues_model import DimVenues
+from .dim_pillars import DimPillars
 from .dim_product_pillars import DimProductPillars
 from .dim_products import DimProducts
 from .fact_sales_summary import FactSalesSummary

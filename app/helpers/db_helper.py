@@ -42,7 +42,7 @@ async def _upsert_batch(
 async def _get_dim_date_key(db: AsyncSession, target_date: datetime):
     stmt = select(DimDate.date_key).where(DimDate.full_date == target_date)
     result = await db.execute(stmt)
-    data_key = result.scalar_one_or_one()
+    data_key = result.scalar_one_or_none()
 
     return data_key
 

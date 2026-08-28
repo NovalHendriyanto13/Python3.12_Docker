@@ -1,28 +1,50 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete
 from configs.mongo import mongo_conn
 from app.models.dim_product_pillars import DimProductPillars
 from app.models.dim_products import DimProducts
+from app.models.dim_pillars import DimPillars
 from app.helpers.app_helper import to_deterministic_uuid
 from app.helpers.db_helper import _upsert_batch
 
-def _build_pillar(pillar_name, pillar_description):
-    if not pillar_name or not pillar_description:
-        return None
+# pillar_details looks like "Beverages:Coffee|Breakfast:Muffin|Breakfast:Other" —
+# segments separated by "|", each segment a "pillar_name:sub_pillar_name" pair.
+# One product can belong to several pillars at once.
+def _parse_pillar_segments(pillar_details):
+    if not pillar_details:
+        return []
 
+    segments = []
+    for raw in pillar_details.split("|"):
+        raw = raw.strip()
+        if not raw or ":" not in raw:
+            continue
+
+        pillar_name, sub_pillar_name = raw.split(":", 1)
+        pillar_name = pillar_name.strip()
+        sub_pillar_name = sub_pillar_name.strip()
+        if not pillar_name or not sub_pillar_name:
+            continue
+
+        segments.append((pillar_name, sub_pillar_name))
+
+    return segments
+
+def _build_pillar(pillar_name, sub_pillar_name):
     return {
-        "product_pillar_key": to_deterministic_uuid("dim_product_pillars", pillar_name, pillar_description),
+        "pillar_key": to_deterministic_uuid("dim_pillars", pillar_name, sub_pillar_name),
         "pillar_name": pillar_name,
-        "pillar_description": pillar_description,
+        "sub_pillar_name": sub_pillar_name,
+        "pillar_description": f"{pillar_name}|{sub_pillar_name}",
     }
 
-def _build_product(mongo_doc, product_pillar_key):
+def _build_product(mongo_doc):
     product_id = mongo_doc.get('key_id')
     if not product_id:
         return None
 
     return {
         "product_key": to_deterministic_uuid("dim_products", product_id),
-        "product_pillar_key": product_pillar_key,
         "product_id": str(product_id),
         "product_name": mongo_doc.get('product_name'),
         "main_category": mongo_doc.get('main_category'),
@@ -30,29 +52,59 @@ def _build_product(mongo_doc, product_pillar_key):
         "sub_category": mongo_doc.get('sub_category'),
     }
 
+def _build_product_pillars(product_key, pillars):
+    return [
+        {
+            "product_pillar_key": to_deterministic_uuid("dim_product_pillars", product_key, p["pillar_key"]),
+            "product_key": product_key,
+            "pillar_key": p["pillar_key"],
+        }
+        for p in pillars
+    ]
+
+async def _sync_product_pillars(db: AsyncSession, product_key, pillars):
+    """Upsert the product's current pillar relations and drop any relation
+    that is no longer present in the source (pillars can change over time)."""
+    junctions = _build_product_pillars(product_key, pillars)
+    current_pillar_keys = [p["pillar_key"] for p in pillars]
+
+    stmt = delete(DimProductPillars).where(DimProductPillars.product_key == product_key)
+    if current_pillar_keys:
+        stmt = stmt.where(DimProductPillars.pillar_key.notin_(current_pillar_keys))
+    await db.execute(stmt)
+
+    if junctions:
+        await _upsert_batch(
+            db=db,
+            model=DimProductPillars,
+            data_list=junctions,
+            index_elements=["product_key", "pillar_key"],
+        )
+
 async def upsert_products(db: AsyncSession, mongo_doc: dict):
     try:
-        pillar = _build_pillar(mongo_doc.get('product_pillars'), mongo_doc.get('pillar_details'))
-        pillar_key = pillar["product_pillar_key"] if pillar else None
+        segments = _parse_pillar_segments(mongo_doc.get('pillar_details'))
+        pillars = [_build_pillar(name, sub_name) for name, sub_name in segments]
 
-        if pillar:
+        if pillars:
             await _upsert_batch(
                 db=db,
-                model=DimProductPillars,
-                data_list=[pillar],
-                index_elements=["product_pillar_key"],
-                exclude_from_update=["product_pillar_key"]
+                model=DimPillars,
+                data_list=pillars,
+                index_elements=["pillar_name", "sub_pillar_name"],
             )
 
-        product = _build_product(mongo_doc, pillar_key)
+        product = _build_product(mongo_doc)
         if product:
             await _upsert_batch(
                 db=db,
                 model=DimProducts,
                 data_list=[product],
-                index_elements=["product_key"],
+                index_elements=["product_id"],
                 exclude_from_update=["product_key"]
             )
+
+            await _sync_product_pillars(db, product["product_key"], pillars)
 
         await db.commit()
     except Exception:
@@ -76,28 +128,31 @@ async def product_init(
 
         # Dedupe within the batch: Postgres' ON CONFLICT DO UPDATE cannot
         # touch the same conflict target twice in one statement, and many
-        # products share the exact same pillar combination.
+        # products share the exact same pillar.
         pillars_by_key = {}
         products_by_key = {}
+        pillars_by_product = {}
 
         for mongo_doc in result:
-            pillar = _build_pillar(mongo_doc.get('product_pillars'), mongo_doc.get('pillar_details'))
-            pillar_key = pillar["product_pillar_key"] if pillar else None
-            if pillar:
-                pillars_by_key[pillar_key] = pillar
+            product = _build_product(mongo_doc)
+            if not product:
+                continue
 
-            product = _build_product(mongo_doc, pillar_key)
-            if product:
-                products_by_key[product["product_key"]] = product
+            products_by_key[product["product_key"]] = product
+
+            segments = _parse_pillar_segments(mongo_doc.get('pillar_details'))
+            product_pillars = [_build_pillar(name, sub_name) for name, sub_name in segments]
+            pillars_by_product[product["product_key"]] = product_pillars
+            for p in product_pillars:
+                pillars_by_key[p["pillar_key"]] = p
 
         try:
             if pillars_by_key:
                 await _upsert_batch(
                     db=db,
-                    model=DimProductPillars,
+                    model=DimPillars,
                     data_list=list(pillars_by_key.values()),
-                    index_elements=["product_pillar_key"],
-                    exclude_from_update=["product_pillar_key"]
+                    index_elements=["pillar_name", "sub_pillar_name"],
                 )
 
             if products_by_key:
@@ -105,12 +160,28 @@ async def product_init(
                     db=db,
                     model=DimProducts,
                     data_list=list(products_by_key.values()),
-                    index_elements=["product_key"],
+                    index_elements=["product_id"],
                     exclude_from_update=["product_key"]
                 )
 
+            product_keys_in_batch = list(products_by_key.keys())
+            await db.execute(delete(DimProductPillars).where(DimProductPillars.product_key.in_(product_keys_in_batch)))
+
+            junctions = [
+                junction
+                for product_key in product_keys_in_batch
+                for junction in _build_product_pillars(product_key, pillars_by_product[product_key])
+            ]
+            if junctions:
+                await _upsert_batch(
+                    db=db,
+                    model=DimProductPillars,
+                    data_list=junctions,
+                    index_elements=["product_key", "pillar_key"],
+                )
+
             await db.commit()
-            print(f"🚀 Bulk Sync Products: upserted {len(products_by_key)} products / {len(pillars_by_key)} pillars.")
+            print(f"🚀 Bulk Sync Products: upserted {len(products_by_key)} products / {len(pillars_by_key)} pillars / {len(junctions)} product-pillar relations.")
         except Exception:
             await db.rollback()
             raise
