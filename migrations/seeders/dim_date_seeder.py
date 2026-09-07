@@ -18,6 +18,8 @@ def generate_dates(start_date: date, end_date: date):
 def get_quarter(month: int) -> int:
     return (month - 1) // 3 + 1
 
+def get_day_string(str_date: date):
+    return str_date.strftime("%A")
 
 async def seed_date_range(start_date: date, end_date: date) -> int:
     """Seed dim_date untuk rentang [start_date, end_date] inklusif.
@@ -40,6 +42,7 @@ async def seed_date_range(start_date: date, end_date: date) -> int:
                     month=d.month,
                     year=d.year,
                     quarter=get_quarter(d.month),
+                    day_string=get_day_string(d),
                 )
                 for d in generate_dates(start_date, end_date)
                 if d not in existing_dates

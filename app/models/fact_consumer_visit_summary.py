@@ -1,11 +1,12 @@
 from sqlalchemy import Column, String, Integer, UniqueConstraint, Index
 from configs.database import Base
 from sqlalchemy.dialects.postgresql import UUID
+import uuid
 
 class FactConsumerVisitSummary(Base):
     __tablename__ = "fact_consumer_visit_summary"
     
-    visit_summary_key = Column(Integer, primary_key=True, autoincrement=True)
+    visit_summary_key = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date_key = Column(Integer, nullable=False)
     consumer_key = Column(UUID(as_uuid=True), nullable=False)
     venue_key = Column(Integer, nullable=True)

@@ -31,6 +31,7 @@ from .dim_product_pillars import DimProductPillars
 from .dim_products import DimProducts
 from .fact_sales_summary import FactSalesSummary
 from .fact_consumer_sales_summary import FactConsumerSalesSummary
+from .fact_consumer_sales_hourly_summary import FactConsumerSalesHourlySummary
 from .fact_consumer_visit_summary import FactConsumerVisitSummary
 from .fact_consumer_sales_header_summary import FactConsumerSalesHeaderSummary
 from .fact_app_activity_summary import FactAppActivitySummary

@@ -1,10 +1,12 @@
-from sqlalchemy import Column, String, BigInteger, Integer, UniqueConstraint, Index
+from sqlalchemy import Column, String, Integer, UniqueConstraint, Index
+from sqlalchemy.dialects.postgresql import UUID
 from configs.database import Base
+import uuid
 
 class FactAppActivitySummary(Base):
     __tablename__ = "fact_app_activity_summary"
 
-    app_activity_key = Column(BigInteger, primary_key=True, autoincrement=True)
+    app_activity_key = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date_key = Column(Integer, nullable=False)
     activity = Column(String, nullable=False)
     device = Column(String, nullable=True)

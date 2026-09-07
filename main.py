@@ -4,11 +4,14 @@ from contextlib import asynccontextmanager
 from app.tasks.task import start_tasks, stop_tasks
 import configs.app_config as appConfig
 from configs.database import Base, engine
+from configs.tunnel_guard import ensure_all_tunnels
 import exceptions.custom_http_exception as CustomHttpException
 import routes.routes as routers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await ensure_all_tunnels()
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

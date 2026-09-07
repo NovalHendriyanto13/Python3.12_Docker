@@ -9,10 +9,10 @@ class EnumTransactionType(PyEnum):
     UNINCENTIVISED = "unincentivised"
     REWARD = "reward"
 
-class FactConsumerSalesHeaderSummary(Base):
-    __tablename__ = "fact_consumer_sales_header_summary"
+class FactTrxTypeSalesSummary(Base):
+    __tablename__ = "fact_transaction_type_sales_summary"
     
-    consumer_sales_header_summary_key = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    transaction_type_sales_summary_key = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     date_key = Column(Integer, nullable=False)
     consumer_key = Column(UUID(as_uuid=True), nullable=False)
     venue_key = Column(Integer, nullable=False)
@@ -31,7 +31,7 @@ class FactConsumerSalesHeaderSummary(Base):
     __table_args__ = (
         UniqueConstraint(
             "date_key", "venue_key", "consumer_key", "transaction_kind",
-            "day_part", "pod_type", "order_take_platform", "sale_type", "transaction_type",
+            "day_part", "pod_type", "order_take_platform", "sale_type",
             name="uq_fact_sales_header_summary"
         ),
     )

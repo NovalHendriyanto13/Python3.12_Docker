@@ -11,3 +11,4 @@ class DimDate(Base):
     month = Column(SmallInteger, nullable=False)
     year = Column(SmallInteger, nullable=False)
     quarter = Column(SmallInteger, nullable=False)
+    day_string = Column(String, nullable=False)

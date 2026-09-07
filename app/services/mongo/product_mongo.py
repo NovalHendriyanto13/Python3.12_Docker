@@ -5,7 +5,13 @@ from app.models.dim_product_pillars import DimProductPillars
 from app.models.dim_products import DimProducts
 from app.models.dim_pillars import DimPillars
 from app.helpers.app_helper import to_deterministic_uuid
-from app.helpers.db_helper import _upsert_batch
+from app.helpers.db_helper import _upsert_batch, _get_max_numeric_id
+
+# product_id (key_id) is auto-filled with a sequential 6-digit string when the
+# source doc doesn't have one. Kept as a per-run counter (seeded once from the
+# DB) instead of re-querying MAX() per doc, since a bulk batch builds all its
+# rows before any of them are inserted.
+KEY_ID_WIDTH = 6
 
 # pillar_details looks like "Beverages:Coffee|Breakfast:Muffin|Breakfast:Other" —
 # segments separated by "|", each segment a "pillar_name:sub_pillar_name" pair.
@@ -38,15 +44,22 @@ def _build_pillar(pillar_name, sub_pillar_name):
         "pillar_description": f"{pillar_name}|{sub_pillar_name}",
     }
 
-def _build_product(mongo_doc):
-    product_id = mongo_doc.get('key_id')
-    if not product_id:
+def _build_product(mongo_doc, id_counter: dict):
+    product_name = mongo_doc.get('product_name')
+    if not product_name:
         return None
 
+    product_id = mongo_doc.get('key_id')
+    if not product_id:
+        id_counter["value"] += 1
+        product_id = str(id_counter["value"]).zfill(KEY_ID_WIDTH)
+
     return {
-        "product_key": to_deterministic_uuid("dim_products", product_id),
+        # Keyed off product_name (the actual unique key) so it stays stable
+        # across runs even when key_id is auto-generated fresh each time.
+        "product_key": to_deterministic_uuid("dim_products", product_name),
         "product_id": str(product_id),
-        "product_name": mongo_doc.get('product_name'),
+        "product_name": product_name,
         "main_category": mongo_doc.get('main_category'),
         "main_sub_menu": mongo_doc.get('menu_sub_menu'),
         "sub_category": mongo_doc.get('sub_category'),
@@ -94,14 +107,15 @@ async def upsert_products(db: AsyncSession, mongo_doc: dict):
                 index_elements=["pillar_name", "sub_pillar_name"],
             )
 
-        product = _build_product(mongo_doc)
+        id_counter = {"value": await _get_max_numeric_id(db, DimProducts, "product_id", KEY_ID_WIDTH)}
+        product = _build_product(mongo_doc, id_counter)
         if product:
             await _upsert_batch(
                 db=db,
                 model=DimProducts,
                 data_list=[product],
-                index_elements=["product_id"],
-                exclude_from_update=["product_key"]
+                index_elements=["product_name"],
+                exclude_from_update=["product_key", "product_id"]
             )
 
             await _sync_product_pillars(db, product["product_key"], pillars)
@@ -116,6 +130,7 @@ async def product_init(
 ):
     batch_size = 1000
     last_id = None
+    id_counter = {"value": await _get_max_numeric_id(db, DimProducts, "product_id", KEY_ID_WIDTH)}
 
     while True:
         current_query = {"_id": {"$gt": last_id}} if last_id is not None else {}
@@ -127,14 +142,15 @@ async def product_init(
             break
 
         # Dedupe within the batch: Postgres' ON CONFLICT DO UPDATE cannot
-        # touch the same conflict target twice in one statement, and many
-        # products share the exact same pillar.
+        # touch the same conflict target twice in one statement. product_key is
+        # derived from product_name (the unique key), so this also collapses
+        # docs that share a product_name.
         pillars_by_key = {}
         products_by_key = {}
         pillars_by_product = {}
 
         for mongo_doc in result:
-            product = _build_product(mongo_doc)
+            product = _build_product(mongo_doc, id_counter)
             if not product:
                 continue
 
@@ -160,8 +176,8 @@ async def product_init(
                     db=db,
                     model=DimProducts,
                     data_list=list(products_by_key.values()),
-                    index_elements=["product_id"],
-                    exclude_from_update=["product_key"]
+                    index_elements=["product_name"],
+                    exclude_from_update=["product_key", "product_id"]
                 )
 
             product_keys_in_batch = list(products_by_key.keys())

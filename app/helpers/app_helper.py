@@ -112,6 +112,31 @@ def get_date_range(
 
     return start_dt, end_dt
 
+def chunk_month_range(
+    start_date: Union[str, date],
+    end_date: Union[str, date],
+):
+    """Yield (start_dt, end_dt) per calendar month so a wide init range
+    doesn't get aggregated against Mongo in a single heavy query."""
+    if isinstance(start_date, str):
+        start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+    if isinstance(end_date, str):
+        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+    current = date(start_date.year, start_date.month, 1)
+    while current <= end_date:
+        if current.month == 12:
+            next_month = date(current.year + 1, 1, 1)
+        else:
+            next_month = date(current.year, current.month + 1, 1)
+
+        chunk_start = max(current, start_date)
+        chunk_end = min(next_month - timedelta(days=1), end_date)
+
+        yield get_date_range(chunk_start, chunk_end)
+
+        current = next_month
+
 def to_utc_datetime(dt: datetime) -> datetime:
     """Pastikan datetime dalam UTC dan timezone-aware untuk query MongoDB."""
     if dt.tzinfo is None:
