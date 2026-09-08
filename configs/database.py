@@ -1,7 +1,50 @@
+import traceback
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from configs import app_config
 from contextlib import asynccontextmanager
+
+_ssh_tunnel = None
+
+
+def start_ssh_tunnel():
+    global _ssh_tunnel
+
+    if not app_config.db_ssh_tunnel_enabled or _ssh_tunnel is not None:
+        return _ssh_tunnel
+
+    from sshtunnel import SSHTunnelForwarder
+
+    tunnel = SSHTunnelForwarder(
+        (app_config.db_ssh_host, app_config.db_ssh_port),
+        ssh_username=app_config.db_ssh_user,
+        ssh_password=app_config.db_ssh_password,
+        remote_bind_address=(app_config.db_remote_host, app_config.db_remote_port),
+        local_bind_address=(app_config.db_local_bind_host, app_config.db_local_bind_port),
+    )
+    try:
+        tunnel.start()
+    except Exception:
+        traceback.print_exc()
+        raise
+
+    print(
+        f"[database] SSH tunnel up: "
+        f"{app_config.db_local_bind_host}:{app_config.db_local_bind_port} -> "
+        f"{app_config.db_ssh_host} -> {app_config.db_remote_host}:{app_config.db_remote_port}"
+    )
+    _ssh_tunnel = tunnel
+    return _ssh_tunnel
+
+
+def stop_ssh_tunnel():
+    global _ssh_tunnel
+    if _ssh_tunnel is not None:
+        _ssh_tunnel.stop()
+        _ssh_tunnel = None
+
+
+start_ssh_tunnel()
 
 engine = create_async_engine(app_config.database_url, echo=True)
 

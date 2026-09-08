@@ -3,7 +3,7 @@ import uvicorn
 from contextlib import asynccontextmanager
 from app.tasks.task import start_tasks, stop_tasks
 import configs.app_config as appConfig
-from configs.database import Base, engine
+from configs.database import Base, engine, stop_ssh_tunnel
 from configs.tunnel_guard import ensure_all_tunnels
 import exceptions.custom_http_exception as CustomHttpException
 import routes.routes as routers
@@ -20,6 +20,7 @@ async def lifespan(app: FastAPI):
     yield
 
     await stop_tasks(tasks)
+    stop_ssh_tunnel()
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(routers.router)
