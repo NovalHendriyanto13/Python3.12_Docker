@@ -21,6 +21,8 @@ def start_ssh_tunnel():
         ssh_password=app_config.db_ssh_password,
         remote_bind_address=(app_config.db_remote_host, app_config.db_remote_port),
         local_bind_address=(app_config.db_local_bind_host, app_config.db_local_bind_port),
+        set_keepalive=15.0,  # bulk ETL opens many concurrent channels for a long time; without
+                             # keepalives the underlying SSH session has gone stale/died mid-run
     )
     try:
         tunnel.start()
