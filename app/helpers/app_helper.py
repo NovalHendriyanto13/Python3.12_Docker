@@ -1,3 +1,5 @@
+import json
+import re
 import uuid
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
@@ -51,6 +53,34 @@ def to_deterministic_uuid(*parts) -> uuid.UUID:
     without a DB round-trip and stay identical across re-runs."""
     key = "|".join("" if p is None else str(p) for p in parts)
     return uuid.uuid5(_UUID_NAMESPACE, key)
+
+def to_jsonb_bool_map(val):
+    """Parse a {"key": true/false, ...} map out of a mangled/double-escaped
+    Mongo string (stray/missing backslashes and quotes) into a clean JSON
+    string suitable for a jsonb column. Returns None if nothing parses."""
+    if val is None or val == "":
+        return None
+    if isinstance(val, dict):
+        return json.dumps(val)
+    if not isinstance(val, str):
+        return None
+    pairs = re.findall(r'"?([A-Za-z0-9_]+)"?\s*:\s*(true|false)', val)
+    if not pairs:
+        return None
+    return json.dumps({k: (v == "true") for k, v in pairs})
+
+def to_string_list(val):
+    """Parse a text[] value out of a mangled/double-escaped Mongo JSON-array
+    string (e.g. '[\\mobileOrderAndPay\\"]"') into a plain list of tokens
+    for asyncpg to COPY into a Postgres ARRAY(String) column."""
+    if val is None or val == "":
+        return None
+    if isinstance(val, list):
+        return val or None
+    if not isinstance(val, str):
+        return None
+    tokens = re.findall(r'[A-Za-z0-9_]+', val)
+    return tokens or None
 
 def to_bool(val):
     if val is None or val == "":

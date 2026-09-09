@@ -1,4 +1,4 @@
-import sys, os, asyncio
+import sys, os, asyncio, uuid
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from prefect import flow, task
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -129,20 +129,20 @@ async def extract_and_load():
     total=0
     async for doc in cursor:
         row=(
-            doc.get("activityid"),
+            str(uuid.uuid4()),
             doc.get("activitydata"),
             to_int(doc.get("actiontypecode")),
             doc.get("actiontypename"),
-            doc.get("devicetypecode"),
+            doc.get("devicetype"),
             doc.get("devicetypename"),
             to_int(doc.get("offerid")),
             doc.get("offername"),
             to_int(doc.get("venueid")),
-            doc.get("market"),
-            doc.get("reportingid"),
+            doc.get("marketid"),
+            to_uuid(doc.get("reportingid")),
             to_datetime(doc.get("date")),
             to_datetime(doc.get("activitysourcetimelocal")),
-            to_datetime(doc.get("activitysourcetimeutc")),
+            to_datetime(doc.get("sourceactivitytimeutc")),
             doc.get("hour"),
             doc.get("sourceactivityoffset"),
             to_int(doc.get("impressioncount")),

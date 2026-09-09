@@ -12,7 +12,7 @@ class SaleDetails(Base):
     offer_id = Column(Integer)
     external_venue_id = Column(UUID(as_uuid=True))
     market = Column(String)
-    product_code = Column(String)
+    product_code = Column(String, primary_key=True)
     quantity = Column(Integer)
     unit_price = Column(Numeric(10, 0))
     net_unit_price = Column(Numeric(10, 0))

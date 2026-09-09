@@ -94,10 +94,10 @@ async def extract_and_load_campaign_fast():
             to_int(doc.get("id")),
             doc.get("market"),
             doc.get("title"),
-            campaign_status[doc.get("status")],
+            campaign_status.get(doc.get("status")),
             doc.get("status"),
             to_datetime(doc.get("creation_date")),
-            to_datetime(doc.get("modfied_date"))
+            to_datetime(doc.get("modified_date"))
         )
 
         batch.append(row)

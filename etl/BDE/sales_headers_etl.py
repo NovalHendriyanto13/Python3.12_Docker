@@ -9,7 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from configs.database import engine
 from configs.app_config import mongo_uri, mongo_db
-from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_bool, to_decimal
+from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_bool, to_decimal, to_deterministic_uuid
 
 # Helper function to load a single chunk to PostgreSQL using COPY + Merge
 async def load_chunk_to_postgres(batch: list, columns: list):
@@ -107,7 +107,7 @@ async def extract_and_load_sales_headers_fast():
     db = client[mongo_db]
     
     # Stream from MongoDB using cursor
-    cursor = db["mcd_sales_headers"].find().batch_size(100000)
+    cursor = db["mcd_sale_headers"].find().batch_size(100000)
     
     columns = [
         "sale_id",
@@ -138,28 +138,32 @@ async def extract_and_load_sales_headers_fast():
     
     print("⏳ Streaming data from MongoDB and synchronizing in chunks of 1,000,000...")
     
+    # Real docs are flat/non-snake_case; sale_id is a POS-style business string
+    # ("FOE0097:3475383433"), not UUID-shaped, so it needs to_deterministic_uuid()
+    # rather than to_uuid(). market/transaction_source_time_local/
+    # plexure_processing_time_utc have no source field at all.
     async for doc in cursor:
         row = (
-            (doc.get("saleid")),
+            to_deterministic_uuid(doc.get("saleid")),
             to_uuid(doc.get("postransactionid")),
             to_uuid(doc.get("reportingid")),
-            (doc.get("offerids")),
-            (doc.get("venue_external_id")),
-            to_decimal(doc.get("total_amount")),
-            to_decimal(doc.get("tax_total_amount")),
-            to_decimal(doc.get("gross_amount")),
-            to_decimal(doc.get("before_discount_tax_total_amount")),
-            to_decimal(doc.get("before_discount_total_amount")),
-            (doc.get("day_part")),
-            (doc.get("pod_type")),
-            (doc.get("transaction_kind")),
-            (doc.get("order_take_platform")),
-            (doc.get("sale_type")),
-            to_datetime(doc.get("date")),
-            (doc.get("market")),
-            to_datetime(doc.get("transaction_source_time_local")),
-            to_datetime(doc.get("plexure_processing_time_utc")),
-            doc.get("internal_id")
+            doc.get("offerids"),
+            doc.get("venueid"),
+            to_decimal(doc.get("totalamount")),
+            to_decimal(doc.get("taxtotalamount")),
+            to_decimal(doc.get("grossamount")),
+            to_decimal(doc.get("beforediscounttaxtotalamount")),
+            to_decimal(doc.get("beforediscounttotalamount")),
+            doc.get("daypart"),
+            doc.get("podtype"),
+            doc.get("transactionkind"),
+            doc.get("ordertakeplatform"),
+            doc.get("saletype"),
+            to_datetime(doc.get("dateoccurred")),
+            None,
+            None,
+            None,
+            doc.get("internalid")
         )
         batch.append(row)
         

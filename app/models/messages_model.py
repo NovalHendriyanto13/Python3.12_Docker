@@ -8,8 +8,11 @@ class Messages(Base):
 
     message_id = Column(Integer, primary_key=True)    
     market = Column(String, nullable=True)
-    status = Column(Integer) 
+    status = Column(Integer)
+    trigger_type_code = Column(Integer)
     name = Column(String, nullable=True)
+    channel_type = Column(Integer)
+    campaign_id = Column(Integer)
     subject = Column(String, nullable=True)
     body = Column(String, nullable=True)
     email_text_body = Column(String, nullable=True)

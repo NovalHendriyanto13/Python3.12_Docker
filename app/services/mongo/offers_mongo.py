@@ -6,7 +6,11 @@ from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_decimal, to_
 from app.services.staging.data_changes_staging import StagingDataChangesService
 
 async def upsert_offers(db: AsyncSession, mongo_doc: dict):
-    offer_id=to_int(mongo_doc.get('offer_id'))
+    # mcd_offers Mongo docs only carry these flat, non-snake_case fields:
+    # id, campaignid, category, codetype, description, isreward, redemptiontext,
+    # status, title, whenexpires, whenlastupdated, whenstarts. Every other
+    # column below has no source field and stays NULL.
+    offer_id=to_int(mongo_doc.get('id'))
     
     existing = await db.execute(
         select(Offers).where(
@@ -18,7 +22,7 @@ async def upsert_offers(db: AsyncSession, mongo_doc: dict):
 
     new_values = dict(
         offer_id=offer_id,
-        campaign_id=to_int(mongo_doc.get('campaign_id')),
+        campaign_id=to_int(mongo_doc.get('campaignid')),
         category_id=to_int(mongo_doc.get('category_id')),
         category=mongo_doc.get('category'),
         market=mongo_doc.get('market'),
@@ -29,7 +33,7 @@ async def upsert_offers(db: AsyncSession, mongo_doc: dict):
         redemption_limit=to_int(mongo_doc.get('redemption_limit')),
         payment_type=to_int(mongo_doc.get('payment_type')),
         redemption_count_unlimited=to_bool(mongo_doc.get('redemption_count_unlimited')),
-        code_type=to_int(mongo_doc.get('code_type')),
+        code_type=to_int(mongo_doc.get('codetype')),
         discount_percent=to_decimal(mongo_doc.get('discount_percent')),
         discount_value=to_decimal(mongo_doc.get('discount_value')),
         status=to_int(mongo_doc.get('status')),
@@ -37,7 +41,7 @@ async def upsert_offers(db: AsyncSession, mongo_doc: dict):
         base_weight=to_int(mongo_doc.get('base_weight')),
         no_compete_group=mongo_doc.get('no_compete_group'),
         is_giftable=to_bool(mongo_doc.get('is_giftable')),
-        is_reward=to_bool(mongo_doc.get('is_reward')),
+        is_reward=to_bool(mongo_doc.get('isreward')),
         is_respawning=to_bool(mongo_doc.get('is_respawning')),
         respawns_in_days=to_int(mongo_doc.get('respawns_in_days')),
         enable_distance_weight=to_bool(mongo_doc.get('enable_distance_weight')),
@@ -53,13 +57,13 @@ async def upsert_offers(db: AsyncSession, mongo_doc: dict):
         name=mongo_doc.get('name'),
         respawns_in_minutes=to_int(mongo_doc.get('respawns_in_minutes')),
         consumer_redemption_limit=to_int(mongo_doc.get('consumer_redemption_limit')),
-        redemption_text=mongo_doc.get('redemption_text'),
+        redemption_text=mongo_doc.get('redemptiontext'),
         days_of_week=mongo_doc.get('days_of_week'),
         daily_start_time=to_int(mongo_doc.get('daily_start_time')),
         daily_end_time=to_int(mongo_doc.get('daily_end_time')),
-        offer_start_time=to_datetime(mongo_doc.get('offer_start_time')),
-        offer_expire_time=to_datetime(mongo_doc.get('offer_expire_time')),
-        when_last_updated_utc=to_datetime(mongo_doc.get('when_last_updated_utc'))
+        offer_start_time=to_datetime(mongo_doc.get('whenstarts')),
+        offer_expire_time=to_datetime(mongo_doc.get('whenexpires')),
+        when_last_updated_utc=to_datetime(mongo_doc.get('whenlastupdated'))
     )
 
     stmt=insert(Offers).values(**new_values).on_conflict_do_update(

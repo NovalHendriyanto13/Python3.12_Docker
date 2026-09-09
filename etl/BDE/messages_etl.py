@@ -14,7 +14,7 @@ async def load_chunk_to_postgres(batch:list, columns:list):
     async with engine.begin() as conn:
         raw_conn=await conn.get_raw_connection()
         asyncpg_conn=raw_conn.driver_connection
-        await conn.execute(text("CREATE TEMP TABLE temp_mcd_messages (LIKE messages EXCLUDING ALL) ON COMMIT DROP"))
+        await conn.execute(text("CREATE TEMP TABLE temp_mcd_messages (LIKE mcd_messages EXCLUDING ALL) ON COMMIT DROP"))
         await asyncpg_conn.copy_records_to_table('temp_mcd_messages', records=batch, columns=columns)
         upsert_query="""
         INSERT INTO mcd_messages (
@@ -109,8 +109,11 @@ async def extract_and_load():
     chunk_size=1000000
     total=0
     async for doc in cursor:
+        message_id = to_int(doc.get("id"))
+        if message_id is None:
+            continue  # ~262 docs have a corrupted/non-numeric "id" (message_id is NOT NULL PK)
         row=(
-            to_int(doc.get("messageid")),
+            message_id,
             doc.get("market"),
             to_int(doc.get("status")),
             to_int(doc.get("triggertypecode")),

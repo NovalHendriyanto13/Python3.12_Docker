@@ -54,7 +54,7 @@ async def load_chunk_to_postgres(batch:list, columns:list):
             date,
             activity_source_time_local,
             activity_source_time_utc 
-        FROM temp_loyalty_activities
+        FROM temp_mcd_loyalty_activities
         ON CONFLICT (activity_id) DO UPDATE SET
             venue_id=EXCLUDED.venue_id,
             activated_reward_id=EXCLUDED.activated_reward_id,

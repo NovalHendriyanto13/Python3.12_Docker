@@ -9,7 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from configs.database import engine
 from configs.app_config import mongo_uri, mongo_db
-from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid
+from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid, to_string_list
 from configs.constants import device_types
 import uuid
 
@@ -75,27 +75,26 @@ async def load_chunk_to_postgres(batch: list, columns: list):
             transaction_time_utc,
             bonus_points_breakdown_position
         FROM temp_mcd_bonus_points_breakdown
-        ON CONFLICT (advertisement_id, reporting_id, market_id) DO UPDATE SET
-            points_program_transaction_id = EXCLUDED.points_program_transaction_id,
-            pos_sales_transaction_id = EXCLUDED.points_program_transaction_id,
-            ordering_method = EXCLUDED.points_program_transaction_id,
-            day_of_week = EXCLUDED.points_program_transaction_id,
-            time_of_day = EXCLUDED.points_program_transaction_id,
-            minimum_spend = EXCLUDED.points_program_transaction_id,
-            product = EXCLUDED.points_program_transaction_id,
-            satisfied_condition_type = EXCLUDED.points_program_transaction_id,
-            bonus_rule_id = EXCLUDED.points_program_transaction_id,
-            bonus_points = EXCLUDED.points_program_transaction_id,
-            standard_points = EXCLUDED.points_program_transaction_id,
-            venue_id = EXCLUDED.points_program_transaction_id,
-            venue_name = EXCLUDED.points_program_transaction_id,
-            venue_external_id = EXCLUDED.points_program_transaction_id,
-            market = EXCLUDED.points_program_transaction_id,
-            reporting_id = EXCLUDED.points_program_transaction_id,
-            date = EXCLUDED.points_program_transaction_id,
-            transaction_source_time_local = EXCLUDED.points_program_transaction_id,
-            transaction_time_utc = EXCLUDED.points_program_transaction_id,
-            bonus_points_breakdown_position = EXCLUDED.points_program_transaction_id;
+        ON CONFLICT (points_program_transaction_id) DO UPDATE SET
+            pos_sales_transaction_id = EXCLUDED.pos_sales_transaction_id,
+            ordering_method = EXCLUDED.ordering_method,
+            day_of_week = EXCLUDED.day_of_week,
+            time_of_day = EXCLUDED.time_of_day,
+            minimum_spend = EXCLUDED.minimum_spend,
+            product = EXCLUDED.product,
+            satisfied_condition_type = EXCLUDED.satisfied_condition_type,
+            bonus_rule_id = EXCLUDED.bonus_rule_id,
+            bonus_points = EXCLUDED.bonus_points,
+            standard_points = EXCLUDED.standard_points,
+            venue_id = EXCLUDED.venue_id,
+            venue_name = EXCLUDED.venue_name,
+            venue_external_id = EXCLUDED.venue_external_id,
+            market = EXCLUDED.market,
+            reporting_id = EXCLUDED.reporting_id,
+            date = EXCLUDED.date,
+            transaction_source_time_local = EXCLUDED.transaction_source_time_local,
+            transaction_time_utc = EXCLUDED.transaction_time_utc,
+            bonus_points_breakdown_position = EXCLUDED.bonus_points_breakdown_position;
         """
         await conn.execute(text(upsert_query))
 
@@ -110,21 +109,63 @@ async def extract_and_load_bonus_points_breakdown_fast():
     db = client[mongo_db]
     
     # Stream from MongoDB using cursor
-    cursor = db["mcd_bonus_points_breakdown"].find().batch_size(100000)
-    
+    cursor = db["mcd_loyalty_points_bonus_breakdown_details"].find().batch_size(100000)
+
     columns = [
-        
+        "points_program_transaction_id",
+        "pos_sales_transaction_id",
+        "ordering_method",
+        "day_of_week",
+        "time_of_day",
+        "minimum_spend",
+        "product",
+        "satisfied_condition_type",
+        "bonus_rule_id",
+        "bonus_points",
+        "standard_points",
+        "venue_id",
+        "venue_name",
+        "venue_external_id",
+        "market",
+        "reporting_id",
+        "date",
+        "transaction_source_time_local",
+        "transaction_time_utc",
+        "bonus_points_breakdown_position",
     ]
-    
+
     chunk_size = 1000000  # Batasi 1.000.000 data per transaksi database
     batch = []
     total = 0
-    
+
     print("⏳ Streaming data from MongoDB and synchronizing in chunks of 1,000,000...")
-    
+
+    # Real docs use already-underscored field names matching the columns above,
+    # except ordering_method/satisfied_condition_type which are mangled JSON-array
+    # strings, and minimum_spend/product/day_of_week/time_of_day/market/date/
+    # bonus_points_breakdown_position which have no source data at all.
     async for doc in cursor:
         row = (
-            
+            to_uuid(doc.get("points_card_transaction_id")),
+            doc.get("pos_sales_transaction_id"),
+            to_string_list(doc.get("ordering_method")),
+            to_string_list(doc.get("day_of_week")),
+            to_string_list(doc.get("time_of_day")),
+            None,
+            None,
+            to_string_list(doc.get("satisfied_condition_type")),
+            doc.get("bonus_rule_id"),
+            to_int(doc.get("bonus_points")),
+            to_int(doc.get("standard_points")),
+            to_int(doc.get("venue_id")),
+            doc.get("venue_name"),
+            doc.get("venue_external_id"),
+            None,
+            to_uuid(doc.get("reporting_id")),
+            None,
+            to_datetime(doc.get("transaction_source_time_local")),
+            to_datetime(doc.get("transaction_time_utc")),
+            None,
         )
 
         batch.append(row)

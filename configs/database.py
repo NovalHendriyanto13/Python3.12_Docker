@@ -46,7 +46,7 @@ def stop_ssh_tunnel():
 
 start_ssh_tunnel()
 
-engine = create_async_engine(app_config.database_url, echo=True)
+engine = create_async_engine(app_config.database_url, echo=False)
 
 AsyncSessionLocal = sessionmaker(
     bind= engine,

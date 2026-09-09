@@ -151,7 +151,7 @@ async def extract_and_load_campaign_fast():
         "consumer_token_generation_count",
         "mfa_token_generation_count",
         "defaultapp_email_registration_count",
-        "altapp1_email_registration_count
+        "altapp1_email_registration_count",
     ]
     
     chunk_size = 1000000  # Batasi 1.000.000 data per transaksi database
@@ -160,33 +160,37 @@ async def extract_and_load_campaign_fast():
     
     print("⏳ Streaming data from MongoDB and synchronizing in chunks of 1,000,000...")
     
+    # Actual mcd_consumer_activities Mongo docs are flat, non-snake_case, and have
+    # no natural "activity_id"/action_type_*/market/date/*_local fields at all:
+    # hour, marketid, devicetype, sourceactivityoffset, sourceactivitytimeutc,
+    # reportingid, timeofprocessed, and the *count fields below.
     async for doc in cursor:
         row = (
-            to_uuid(doc.get("activity_id")),
-            (doc.get("action_type_code")),
-            (doc.get("action_type_name")),
-            (doc.get("action_type_detail")),
-            (doc.get("device_type_code")),
-            (doc.get("device_type_name")),
-            (doc.get("market")),
-            (doc.get("reporting_id")),
-            (doc.get("date")),
-            (doc.get("activity_source_time_local")),
-            (doc.get("activity_source_time_utc")),
-            (doc.get("source_activity_offset")),
-            (doc.get("hour")),
-            (doc.get("time_of_processed")),
-            (doc.get("market_id")),
-            (doc.get("download_count")),
-            (doc.get("startup_count")),
-            (doc.get("registration_count")),
-            (doc.get("login_count")),
-            (doc.get("email_registration_count")),
-            (doc.get("device_registration_count")),
-            (doc.get("consumer_token_generation_count")),
-            (doc.get("mfa_token_generation_count")),
-            (doc.get("defaultapp_email_registration_count")),
-            (doc.get("altapp1_email_registration_count"))
+            str(uuid.uuid4()),
+            None,
+            None,
+            None,
+            doc.get("devicetype"),
+            None,
+            None,
+            to_uuid(doc.get("reportingid")),
+            None,
+            None,
+            to_datetime(doc.get("sourceactivitytimeutc")),
+            doc.get("sourceactivityoffset"),
+            doc.get("hour"),
+            to_datetime(doc.get("timeofprocessed")),
+            doc.get("marketid"),
+            doc.get("downloadcount"),
+            doc.get("startupcount"),
+            doc.get("registrationcount"),
+            doc.get("logincount"),
+            doc.get("emailregistrationcount"),
+            doc.get("deviceregistrationcount"),
+            doc.get("consumertokengenerationcount"),
+            doc.get("mfatokengenerationcount"),
+            doc.get("defaultapp_emailregistrationcount"),
+            doc.get("altapp1_emailregistrationcount")
         )
 
         batch.append(row)

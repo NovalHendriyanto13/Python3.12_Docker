@@ -9,7 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from configs.database import engine
 from configs.app_config import mongo_uri, mongo_db
-from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_bool, to_decimal
+from app.helpers.app_helper import to_uuid, to_datetime, to_int, to_bool, to_decimal, to_jsonb_bool_map
 
 # Helper function to load a single chunk to PostgreSQL using COPY + Merge
 async def load_chunk_to_postgres(batch: list, columns: list):
@@ -45,8 +45,7 @@ async def load_chunk_to_postgres(batch: list, columns: list):
             event_time_utc,
             date    
         FROM temp_mcd_gdpr_consumer_consent_events
-        ON CONFLICT (reporting_id, market, consent_to_store_and_process, services, event_time_utc, date) DO UPDATE SET
-            reporting_id = EXCLUDED.reporting_id,
+        ON CONFLICT (reporting_id) DO UPDATE SET
             market = EXCLUDED.market,
             consent_to_store_and_process = EXCLUDED.consent_to_store_and_process,
             services = EXCLUDED.services,
@@ -66,7 +65,7 @@ async def extract_and_load_gdpr_consumer_consent_events_fast():
     db = client[mongo_db]
     
     # Stream from MongoDB using cursor
-    cursor = db["mcd_gdpr_consumer_consent_events"].find().batch_size(100000)
+    cursor = db["mcd_gdpr_consumer_consent_event_log"].find().batch_size(100000)
     
     columns = [
         "reporting_id",
@@ -88,7 +87,7 @@ async def extract_and_load_gdpr_consumer_consent_events_fast():
             to_uuid(doc.get("reportingid")),
             (doc.get("market")),
             to_bool(doc.get("consenttostoreandprocess")),
-            (doc.get("services")),
+            to_jsonb_bool_map(doc.get("services")),
             to_datetime(doc.get("timestamp")),
             to_datetime(doc.get("date"))
         )

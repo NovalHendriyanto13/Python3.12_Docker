@@ -61,7 +61,7 @@ async def load_chunk_to_postgres(batch:list, columns:list):
             time_zone,
             open_hours,
             when_last_updated 
-        FROM temp_venues
+        FROM temp_mcd_venues
         ON CONFLICT (venue_id) DO UPDATE SET
             venue_external_id=EXCLUDED.venue_external_id,
             region_id=EXCLUDED.region_id,
@@ -121,7 +121,7 @@ async def extract_and_load():
         row=(
             to_int(doc.get("id")),
             doc.get("externalid"),
-            doc.get("region_id")),
+            doc.get("region_id"),
             doc.get("market"),
             doc.get("name"),
             doc.get("locationlat"),

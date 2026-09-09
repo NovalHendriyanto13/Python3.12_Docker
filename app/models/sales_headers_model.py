@@ -24,4 +24,5 @@ class SalesHeaders(Base):
     date = Column(Date)
     market = Column(String)
     transaction_source_time_local = Column(TIMESTAMP(timezone=True))
-    plexure_processing_time_utc = Column(TIMESTAMP(timezone=False))  
+    plexure_processing_time_utc = Column(TIMESTAMP(timezone=False))
+    internal_id = Column(String)

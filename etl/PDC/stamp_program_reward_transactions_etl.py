@@ -104,7 +104,7 @@ async def extract_and_load_stamp_program_reward_transactions_fast():
     db = client[mongo_db]
     
     # Stream from MongoDB using cursor
-    cursor = db["mcd_stamp_program_reward_transactions"].find().batch_size(100000)
+    cursor = db["mcd_loyalty_stamp_card_reward_transactions"].find().batch_size(100000)
     
     columns = [
         "stamp_program_reward_transaction_id",
@@ -136,8 +136,8 @@ async def extract_and_load_stamp_program_reward_transactions_fast():
     
     async for doc in cursor:
         row = (
-            to_uuid(doc.get("stamp_program_reward_transaction_id")),
-            to_uuid(doc.get("stamp_program_reward_transaction_group_id")),
+            to_uuid(doc.get("stamp_card_reward_transaction_id")),
+            to_uuid(doc.get("stamp_card_reward_transaction_group_id")),
             to_uuid(doc.get("pos_sales_transaction_id")),
             to_uuid(doc.get("sale_id")),
             to_int(doc.get("incentive_program_id")),
