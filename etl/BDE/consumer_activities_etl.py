@@ -9,7 +9,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from configs.database import engine
 from configs.app_config import mongo_uri, mongo_db
-from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid
+from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid, to_deterministic_uuid
 from configs.constants import campaign_status
 import uuid
 
@@ -166,7 +166,7 @@ async def extract_and_load_campaign_fast():
     # reportingid, timeofprocessed, and the *count fields below.
     async for doc in cursor:
         row = (
-            str(uuid.uuid4()),
+            to_deterministic_uuid(str(doc["_id"])),
             None,
             None,
             None,

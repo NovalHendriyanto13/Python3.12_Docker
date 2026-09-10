@@ -11,7 +11,9 @@ async def upsert_offers(db: AsyncSession, mongo_doc: dict):
     # status, title, whenexpires, whenlastupdated, whenstarts. Every other
     # column below has no source field and stays NULL.
     offer_id=to_int(mongo_doc.get('id'))
-    
+    if offer_id is None:
+        return  # a handful of docs have a corrupted/non-numeric "id" (offer_id is NOT NULL PK)
+
     existing = await db.execute(
         select(Offers).where(
             Offers.offer_id == offer_id

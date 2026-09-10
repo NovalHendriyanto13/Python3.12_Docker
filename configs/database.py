@@ -1,3 +1,5 @@
+import socket
+import time
 import traceback
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
@@ -7,15 +9,20 @@ from contextlib import asynccontextmanager
 _ssh_tunnel = None
 
 
-def start_ssh_tunnel():
-    global _ssh_tunnel
+_TUNNEL_RETRIES = 3
+_TUNNEL_RETRY_DELAY = 2
 
-    if not app_config.db_ssh_tunnel_enabled or _ssh_tunnel is not None:
-        return _ssh_tunnel
 
+def _local_bind_in_use():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(2)
+        return sock.connect_ex((app_config.db_local_bind_host, app_config.db_local_bind_port)) == 0
+
+
+def _build_tunnel():
     from sshtunnel import SSHTunnelForwarder
 
-    tunnel = SSHTunnelForwarder(
+    return SSHTunnelForwarder(
         (app_config.db_ssh_host, app_config.db_ssh_port),
         ssh_username=app_config.db_ssh_user,
         ssh_password=app_config.db_ssh_password,
@@ -24,11 +31,40 @@ def start_ssh_tunnel():
         set_keepalive=15.0,  # bulk ETL opens many concurrent channels for a long time; without
                              # keepalives the underlying SSH session has gone stale/died mid-run
     )
-    try:
-        tunnel.start()
-    except Exception:
-        traceback.print_exc()
-        raise
+
+
+def start_ssh_tunnel():
+    global _ssh_tunnel
+
+    if not app_config.db_ssh_tunnel_enabled or _ssh_tunnel is not None:
+        return _ssh_tunnel
+
+    if _local_bind_in_use():
+        print(
+            f"[database] SSH tunnel: {app_config.db_local_bind_host}:"
+            f"{app_config.db_local_bind_port} is already forwarded by another "
+            f"process, reusing it."
+        )
+        return None
+
+    tunnel = None
+    for attempt in range(1, _TUNNEL_RETRIES + 1):
+        # a fresh forwarder per attempt: a failed start() leaves its own local
+        # server bound to the port, so reusing the object just self-collides
+        tunnel = _build_tunnel()
+        try:
+            tunnel.start()
+            break
+        except Exception:
+            traceback.print_exc()
+            try:
+                tunnel.stop(force=True)
+            except Exception:
+                pass
+            if attempt == _TUNNEL_RETRIES:
+                raise
+            print(f"[database] SSH tunnel attempt {attempt}/{_TUNNEL_RETRIES} failed, retrying...")
+            time.sleep(_TUNNEL_RETRY_DELAY)
 
     print(
         f"[database] SSH tunnel up: "

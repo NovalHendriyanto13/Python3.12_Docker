@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy import text
 from configs.database import engine
 from configs.app_config import mongo_uri, mongo_db
-from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid
+from app.helpers.app_helper import to_datetime, to_int, to_bool, to_uuid, to_deterministic_uuid
 
 TABLE_NAME="mcd_offer_activities"
 TARGET_TABLE="mcd_offer_activities"
@@ -129,7 +129,7 @@ async def extract_and_load():
     total=0
     async for doc in cursor:
         row=(
-            str(uuid.uuid4()),
+            to_deterministic_uuid(str(doc["_id"])),
             doc.get("activitydata"),
             to_int(doc.get("actiontypecode")),
             doc.get("actiontypename"),
